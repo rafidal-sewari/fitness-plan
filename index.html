@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Plan">
+<meta name="theme-color" content="#0f0f0f">
+<title>My Fitness Plan</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #1a1a1a;
+    --bg3: #242424;
+    --bg4: #2e2e2e;
+    --border: #333;
+    --text: #f0f0f0;
+    --text2: #999;
+    --text3: #666;
+    --blue: #3b82f6;
+    --blue-bg: rgba(59,130,246,0.12);
+    --blue-border: rgba(59,130,246,0.3);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --green-border: rgba(34,197,94,0.3);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.12);
+    --amber-border: rgba(245,158,11,0.3);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.1);
+    --purple: #a855f7;
+    --purple-bg: rgba(168,85,247,0.12);
+    --tab-h: 64px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; overflow: hidden; }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 12px 16px 10px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); flex-shrink: 0; }
+  #header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  #header p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  #content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #tab-bar { display: flex; background: var(--bg); border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom); flex-shrink: 0; }
+  .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; gap: 4px; border: none; background: none; color: var(--text3); font-size: 10px; font-weight: 500; cursor: pointer; min-height: var(--tab-h); transition: color 0.15s; }
+  .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-btn.active { color: var(--blue); }
+
+  /* Panels */
+  .panel { display: none; padding: 16px; padding-bottom: 32px; }
+  .panel.active { display: block; }
+
+  /* Section label */
+  .slabel { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; color: var(--text3); text-transform: uppercase; margin: 20px 0 10px; }
+  .slabel:first-child { margin-top: 0; }
+
+  /* Week grid */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 4px; }
+  .wday { border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid var(--border); }
+  .wday .wd-name { font-size: 9px; color: var(--text3); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .wday .wd-type { font-size: 10px; font-weight: 600; line-height: 1.2; }
+  .wday .wd-sub { font-size: 9px; color: var(--text3); margin-top: 2px; line-height: 1.2; }
+  .wday.push { background: var(--blue-bg); border-color: var(--blue-border); }
+  .wday.push .wd-type { color: var(--blue); }
+  .wday.pull { background: var(--green-bg); border-color: var(--green-border); }
+  .wday.pull .wd-type { color: var(--green); }
+  .wday.legs { background: var(--amber-bg); border-color: var(--amber-border); }
+  .wday.legs .wd-type { color: var(--amber); }
+  .wday.rest { background: var(--bg2); }
+  .wday.rest .wd-type { color: var(--text3); }
+
+  /* Note box */
+  .note { background: var(--bg2); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 4px; }
+
+  /* Workout block */
+  .wblock { background: var(--bg2); border-radius: 12px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+  .wblock-header { padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .wbadge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; }
+  .wbadge.push { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .wbadge.pull { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .wbadge.legs { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .wblock-title { font-size: 15px; font-weight: 600; }
+  .ex-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-row.shoulder { background: rgba(245,158,11,0.05); }
+  .ex-name { font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .spill { font-size: 9px; font-weight: 600; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); padding: 1px 6px; border-radius: 4px; }
+  .ex-sets { font-size: 13px; color: var(--text2); white-space: nowrap; }
+
+  /* Meals */
+  .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
+  .mcard { background: var(--bg2); border-radius: 10px; padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
+  .mcard .ml { font-size: 10px; color: var(--text3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .mcard .mv { font-size: 19px; font-weight: 700; }
+  .mcard .mu { font-size: 10px; color: var(--text3); }
+  .meal-card { background: var(--bg2); border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border); }
+  .meal-head { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .meal-head .mn { font-size: 14px; font-weight: 600; }
+  .meal-head .mt { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .meal-body { padding: 6px 14px 10px; }
+  .ingr-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: var(--text2); border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .ingr-row:last-child { border-bottom: none; }
+  .ingr-row .ia { font-size: 12px; color: var(--text3); }
+
+  /* Prep */
+  .prep-block { background: var(--bg2); border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .prep-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .prep-step { display: flex; gap: 10px; padding: 4px 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .prep-step .sn { font-size: 11px; font-weight: 700; color: var(--text3); min-width: 14px; margin-top: 1px; }
+
+  /* Grocery */
+  .groc-section { background: var(--bg2); border-radius: 12px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+  .groc-head { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
+  .groc-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; user-select: none; }
+  .groc-row:last-child { border-bottom: none; }
+  .groc-row.done { opacity: 0.4; }
+  .groc-row.done .gn { text-decoration: line-through; }
+  .groc-left { display: flex; align-items: center; gap: 12px; }
+  .gcheck { width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .groc-row.done .gcheck { background: var(--green); border-color: var(--green); }
+  .gcheck-mark { display: none; width: 10px; height: 7px; }
+  .groc-row.done .gcheck-mark { display: block; }
+  .gn { font-size: 14px; }
+  .gq { font-size: 13px; color: var(--text3); text-align: right; max-width: 120px; }
+  .groc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .groc-prog { font-size: 13px; color: var(--text2); }
+  .groc-clear { font-size: 13px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 6px 0; }
+
+  /* Progress */
+  .prog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .prog-header h3 { font-size: 16px; font-weight: 600; }
+  .prog-header button { font-size: 13px; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 600; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .stat-card { background: var(--bg2); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
+  .stat-card .sc-label { font-size: 11px; color: var(--text3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-card .sc-val { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .stat-card .sc-unit { font-size: 13px; color: var(--text2); margin-left: 3px; }
+  .stat-card .sc-delta { font-size: 12px; margin-top: 4px; }
+  .stat-card .sc-delta.pos { color: var(--green); }
+  .stat-card .sc-delta.neg { color: var(--red); }
+  .stat-card .sc-delta.neu { color: var(--text3); }
+  .log-block { background: var(--bg2); border-radius: 12px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+  .log-block-head { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--text2); }
+  .log-entry { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .log-entry:last-child { border-bottom: none; }
+  .log-date { font-size: 13px; color: var(--text2); }
+  .log-vals { display: flex; gap: 14px; align-items: center; }
+  .log-vals span { font-size: 14px; font-weight: 600; }
+  .log-vals .lv-label { font-size: 11px; color: var(--text3); }
+  .log-col { text-align: right; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; line-height: 1.6; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; padding-bottom: var(--safe-bottom); }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: var(--bg2); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom)); width: 100%; border: 1px solid var(--border); border-bottom: none; }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .modal label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; margin-top: 12px; }
+  .modal input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 16px; padding: 11px 14px; appearance: none; -webkit-appearance: none; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-btns button { flex: 1; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-cancel { background: var(--bg3); color: var(--text2); }
+  .btn-save { background: var(--blue); color: #fff; }
+
+  /* Scrollbar */
+  #content::-webkit-scrollbar { display: none; }
+
+  /* Progress sub-tabs */
+  .sub-tabs { display: flex; background: var(--bg3); border-radius: 10px; padding: 3px; margin-bottom: 16px; gap: 3px; }
+  .sub-tab { flex: 1; padding: 8px; border: none; border-radius: 8px; background: none; color: var(--text3); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .sub-tab.active { background: var(--bg2); color: var(--text); }
+
+  /* Strength log */
+  .str-ex-block { background: var(--bg2); border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border); }
+  .str-ex-head { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .str-ex-name { font-size: 14px; font-weight: 600; }
+  .str-ex-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; }
+  .str-ex-badge.push { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .str-ex-badge.pull { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .str-ex-badge.legs { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .str-entry-row { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .str-entry-row:last-child { border-bottom: none; }
+  .str-entry-date { font-size: 12px; color: var(--text3); }
+  .str-entry-sets { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .str-entry-right { text-align: right; }
+  .str-best { font-size: 14px; font-weight: 700; }
+  .str-delta { font-size: 12px; margin-top: 2px; }
+  .str-delta.up { color: var(--green); }
+  .str-delta.down { color: var(--red); }
+  .str-delta.same { color: var(--text3); }
+  .str-log-btn { font-size: 12px; background: var(--blue); color: #fff; border: none; border-radius: 7px; padding: 5px 11px; cursor: pointer; font-weight: 600; white-space: nowrap; margin-left: 10px; }
+  .str-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+
+  /* Strength modal extras */
+  .set-rows { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .set-row { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; align-items: center; }
+  .set-num { font-size: 12px; color: var(--text3); font-weight: 600; text-align: center; }
+  .set-row input { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 16px; padding: 10px 12px; width: 100%; appearance: none; -webkit-appearance: none; }
+  .add-set-btn { background: none; border: 1px dashed var(--border); border-radius: 10px; color: var(--text3); font-size: 13px; padding: 10px; width: 100%; cursor: pointer; margin-top: 4px; }
+  .modal-ex-picker { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 16px; padding: 11px 14px; appearance: none; -webkit-appearance: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>My Fitness Plan</h1>
+    <p id="header-sub">Loading...</p>
+  </div>
+
+  <div id="content">
+
+    <!-- WORKOUT -->
+    <div id="panel-workout" class="panel active">
+      <div class="week-grid">
+        <div class="wday push"><div class="wd-name">Mon</div><div class="wd-type">Push A</div><div class="wd-sub">chest first</div></div>
+        <div class="wday pull"><div class="wd-name">Tue</div><div class="wd-type">Pull A</div><div class="wd-sub">back first</div></div>
+        <div class="wday legs"><div class="wd-name">Wed</div><div class="wd-type">Legs A</div><div class="wd-sub">quads first</div></div>
+        <div class="wday rest"><div class="wd-name">Thu</div><div class="wd-type">Rest</div></div>
+        <div class="wday push"><div class="wd-name">Fri</div><div class="wd-type">Push B</div><div class="wd-sub">shoulders first</div></div>
+        <div class="wday pull"><div class="wd-name">Sat</div><div class="wd-type">Pull B</div><div class="wd-sub">biceps first</div></div>
+        <div class="wday legs"><div class="wd-name">Sun</div><div class="wd-type">Legs B</div><div class="wd-sub">hamstrings first</div></div>
+      </div>
+      <div class="note" style="margin-top:12px">3 × 8–12 reps. Add weight when you hit 12 on all 3 sets. Rest 60–90 sec. ~50 min + 20 min walk.</div>
+
+      <div class="slabel">Push A — Mon, chest leads</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge push">Push A</span><span class="wblock-title">Chest · Shoulders · Triceps</span></div>
+        <div class="ex-row"><span class="ex-name">Incline barbell press</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Cable fly (low to high)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Dips</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Shoulder press machine <span class="spill">shoulders</span></span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Lateral raise <span class="spill">shoulders</span></span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row"><span class="ex-name">Tricep rope pushdown</span><span class="ex-sets">3 × 10–12</span></div>
+      </div>
+
+      <div class="slabel">Pull A — Tue, back leads</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge pull">Pull A</span><span class="wblock-title">Back · Biceps · Rear delt</span></div>
+        <div class="ex-row"><span class="ex-name">Pull-ups (or lat pulldown)</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">T-bar row</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Cable row (close grip)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Reverse pec deck</span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Lateral raise <span class="spill">shoulders</span></span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row"><span class="ex-name">Standing preacher curl</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Incline dumbbell curl</span><span class="ex-sets">3 × 10–12</span></div>
+      </div>
+
+      <div class="slabel">Legs A — Wed, quads lead</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge legs">Legs A</span><span class="wblock-title">Quads · Hamstrings · Calves</span></div>
+        <div class="ex-row"><span class="ex-name">Barbell squat</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Leg press</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Romanian deadlift</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Leg curl (machine)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Back extensions</span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row"><span class="ex-name">Calf raise (standing)</span><span class="ex-sets">3 × 15–20</span></div>
+      </div>
+
+      <div class="slabel">Push B — Fri, shoulders lead</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge push">Push B</span><span class="wblock-title">Shoulders · Chest · Triceps</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Shoulder press machine <span class="spill">shoulders</span></span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Lateral raise <span class="spill">shoulders</span></span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row"><span class="ex-name">Incline barbell press</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Cable fly (low to high)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Dips</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Tricep rope pushdown</span><span class="ex-sets">3 × 10–12</span></div>
+      </div>
+
+      <div class="slabel">Pull B — Sat, biceps lead</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge pull">Pull B</span><span class="wblock-title">Biceps · Back · Rear delt</span></div>
+        <div class="ex-row"><span class="ex-name">Standing preacher curl</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Incline dumbbell curl</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Pull-ups (or lat pulldown)</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">T-bar row</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Cable row (close grip)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Reverse pec deck</span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row shoulder"><span class="ex-name">Lateral raise <span class="spill">shoulders</span></span><span class="ex-sets">3 × 12–15</span></div>
+      </div>
+
+      <div class="slabel">Legs B — Sun, hamstrings lead</div>
+      <div class="wblock">
+        <div class="wblock-header"><span class="wbadge legs">Legs B</span><span class="wblock-title">Hamstrings · Quads · Calves</span></div>
+        <div class="ex-row"><span class="ex-name">Romanian deadlift</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Leg curl (machine)</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Back extensions</span><span class="ex-sets">3 × 12–15</span></div>
+        <div class="ex-row"><span class="ex-name">Barbell squat</span><span class="ex-sets">3 × 8–12</span></div>
+        <div class="ex-row"><span class="ex-name">Leg press</span><span class="ex-sets">3 × 10–12</span></div>
+        <div class="ex-row"><span class="ex-name">Calf raise (standing)</span><span class="ex-sets">3 × 15–20</span></div>
+      </div>
+    </div>
+
+    <!-- MEALS -->
+    <div id="panel-meals" class="panel">
+      <div class="slabel">Daily macros</div>
+      <div class="macro-grid">
+        <div class="mcard"><div class="ml">Calories</div><div class="mv">1,950<span class="mu">kcal</span></div></div>
+        <div class="mcard"><div class="ml">Protein</div><div class="mv">185<span class="mu">g</span></div></div>
+        <div class="mcard"><div class="ml">Carbs</div><div class="mv">180<span class="mu">g</span></div></div>
+        <div class="mcard"><div class="ml">Fat</div><div class="mv">52<span class="mu">g</span></div></div>
+      </div>
+      <div class="slabel">Same 4 meals, every day</div>
+      <div class="meal-card">
+        <div class="meal-head"><div class="mn">Meal 1 — Breakfast</div><div class="mt">7–8 am</div></div>
+        <div class="meal-body">
+          <div class="ingr-row"><span>Eggs, whole</span><span class="ia">3 large</span></div>
+          <div class="ingr-row"><span>Egg whites</span><span class="ia">4 (carton ok)</span></div>
+          <div class="ingr-row"><span>Baby potatoes (roasted)</span><span class="ia">150g</span></div>
+          <div class="ingr-row"><span>Blueberries</span><span class="ia">½ cup</span></div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-head"><div class="mn">Meal 2 — Lunch</div><div class="mt">12–1 pm</div></div>
+        <div class="meal-body">
+          <div class="ingr-row"><span>Chicken breast (cooked)</span><span class="ia">6 oz</span></div>
+          <div class="ingr-row"><span>Baby potatoes (roasted)</span><span class="ia">150g</span></div>
+          <div class="ingr-row"><span>Broccoli (steamed)</span><span class="ia">1.5 cups</span></div>
+          <div class="ingr-row"><span>Olive oil</span><span class="ia">1 tsp</span></div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-head"><div class="mn">Meal 3 — Snack</div><div class="mt">3–4 pm</div></div>
+        <div class="meal-body">
+          <div class="ingr-row"><span>Non-fat Greek yogurt</span><span class="ia">1 cup</span></div>
+          <div class="ingr-row"><span>Mixed berries</span><span class="ia">½ cup</span></div>
+          <div class="ingr-row"><span>Protein bar (20g+)</span><span class="ia">1 bar</span></div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-head"><div class="mn">Meal 4 — Dinner</div><div class="mt">7–8 pm</div></div>
+        <div class="meal-body">
+          <div class="ingr-row"><span>Lean ground beef (93%)</span><span class="ia">6 oz</span></div>
+          <div class="ingr-row"><span>Baby potatoes (roasted)</span><span class="ia">150g</span></div>
+          <div class="ingr-row"><span>Mixed greens</span><span class="ia">2 cups</span></div>
+          <div class="ingr-row"><span>Balsamic vinegar</span><span class="ia">1 tbsp</span></div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:4px">Swap ground beef for salmon (6 oz) twice a week. Drink at least 3L water daily.</div>
+    </div>
+
+    <!-- PREP -->
+    <div id="panel-prep" class="panel">
+      <div class="note">Sunday prep — about 90 min, covers the full week.</div>
+      <div class="slabel">Protein batch</div>
+      <div class="prep-block">
+        <div class="prep-title">Chicken &amp; beef</div>
+        <div class="prep-step"><span class="sn">1</span><span>Season 4 lbs chicken breast with salt, garlic powder, paprika. Bake at 400°F for 22–25 min. Cool, slice, portion into 7 containers (6 oz each).</span></div>
+        <div class="prep-step"><span class="sn">2</span><span>Brown 2.5 lbs lean ground beef in a skillet, drain fat, season with salt and pepper. Portion into 7 containers (6 oz each).</span></div>
+      </div>
+      <div class="slabel">Potato batch</div>
+      <div class="prep-block">
+        <div class="prep-title">Covers breakfast, lunch &amp; dinner</div>
+        <div class="prep-step"><span class="sn">1</span><span>Halve a 5 lb bag of baby potatoes. Toss in olive oil spray, salt, garlic powder, and pepper.</span></div>
+        <div class="prep-step"><span class="sn">2</span><span>Roast at 425°F for 25–30 min on 2 sheet pans, flipping halfway. Portion 150g per container. Reheat 2 min in microwave.</span></div>
+      </div>
+      <div class="slabel">Veggies</div>
+      <div class="prep-block">
+        <div class="prep-title">Broccoli &amp; greens</div>
+        <div class="prep-step"><span class="sn">1</span><span>Steam or microwave 1 large bag broccoli. Portion 1.5 cups into each lunch container.</span></div>
+        <div class="prep-step"><span class="sn">2</span><span>Buy pre-washed mixed greens — grab and serve at dinner, no prep needed.</span></div>
+      </div>
+      <div class="slabel">Breakfast &amp; snack</div>
+      <div class="prep-block">
+        <div class="prep-title">Zero to minimal prep</div>
+        <div class="prep-step"><span class="sn">1</span><span>Keep eggs and egg whites in the fridge. Cook fresh each morning (~5 min). Microwave pre-prepped potatoes while eggs cook.</span></div>
+        <div class="prep-step"><span class="sn">2</span><span>Buy Greek yogurt in a bulk tub and a box of protein bars. Keep berries in the freezer — thaw overnight or 30 sec in microwave.</span></div>
+      </div>
+    </div>
+
+    <!-- GROCERY -->
+    <div id="panel-grocery" class="panel">
+      <div class="note">Tap items to check off as you shop. Same list every week.</div>
+      <div class="slabel">Meat &amp; fish</div>
+      <div class="groc-section">
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Chicken breast</span></div>
+          <span class="gq">4 lbs</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Lean ground beef (93%)</span></div>
+          <span class="gq">2.5 lbs</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Salmon fillet</span></div>
+          <span class="gq">~¾ lb (2 × 6 oz)</span>
+        </div>
+      </div>
+      <div class="slabel">Dairy &amp; eggs</div>
+      <div class="groc-section">
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Whole eggs</span></div>
+          <span class="gq">21 large (2 dozen)</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Liquid egg whites (carton)</span></div>
+          <span class="gq">1 large carton</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Non-fat Greek yogurt</span></div>
+          <span class="gq">52 oz tub</span>
+        </div>
+      </div>
+      <div class="slabel">Produce</div>
+      <div class="groc-section">
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Baby potatoes</span></div>
+          <span class="gq">5 lb bag</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Broccoli florets</span></div>
+          <span class="gq">1 large bag (frozen ok)</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Mixed greens (pre-washed)</span></div>
+          <span class="gq">1 large container</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Blueberries</span></div>
+          <span class="gq">3.5 cups (~1 clamshell)</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Mixed berries (frozen ok)</span></div>
+          <span class="gq">3.5 cups (~1 bag)</span>
+        </div>
+      </div>
+      <div class="slabel">Packaged &amp; pantry</div>
+      <div class="groc-section">
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Protein bars (20g+ protein)</span></div>
+          <span class="gq">7 bars (1 box)</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Olive oil</span></div>
+          <span class="gq">small bottle</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Balsamic vinegar</span></div>
+          <span class="gq">small bottle</span>
+        </div>
+        <div class="groc-row" onclick="toggleGroc(this)">
+          <div class="groc-left"><div class="gcheck"><svg class="gcheck-mark" viewBox="0 0 10 7"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="gn">Garlic powder, paprika, salt &amp; pepper</span></div>
+          <span class="gq">pantry staples</span>
+        </div>
+      </div>
+      <div class="groc-footer">
+        <span class="groc-prog" id="groc-prog">0 of 17 checked</span>
+        <button class="groc-clear" onclick="clearGroc()">Clear all</button>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="panel-progress" class="panel">
+      <div class="sub-tabs">
+        <button class="sub-tab active" id="subtab-body" onclick="showSubTab('body', this)">Body</button>
+        <button class="sub-tab" id="subtab-strength" onclick="showSubTab('strength', this)">Strength</button>
+      </div>
+
+      <!-- BODY SUB-TAB -->
+      <div id="subpanel-body">
+        <div class="prog-header">
+          <h3>Body</h3>
+          <button onclick="openModal()">+ Log entry</button>
+        </div>
+        <div class="slabel">Current stats</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="sc-label">Weight</div>
+            <div><span class="sc-val" id="stat-weight">—</span><span class="sc-unit">lbs</span></div>
+            <div class="sc-delta neu" id="stat-weight-delta">No entries yet</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Body fat</div>
+            <div><span class="sc-val" id="stat-bf">—</span><span class="sc-unit">%</span></div>
+            <div class="sc-delta neu" id="stat-bf-delta">Goal: 12–15%</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Starting weight</div>
+            <div><span class="sc-val">160</span><span class="sc-unit">lbs</span></div>
+            <div class="sc-delta neu">baseline</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Starting BF</div>
+            <div><span class="sc-val">25</span><span class="sc-unit">%</span></div>
+            <div class="sc-delta neu">baseline</div>
+          </div>
+        </div>
+        <div class="slabel">Log</div>
+        <div id="log-list">
+          <div class="empty-state">No entries yet.<br>Tap <strong>+ Log entry</strong> to record your first weigh-in.</div>
+        </div>
+      </div>
+
+      <!-- STRENGTH SUB-TAB -->
+      <div id="subpanel-strength" style="display:none">
+        <div class="prog-header">
+          <h3>Strength</h3>
+          <button onclick="openStrModal()">+ Log lift</button>
+        </div>
+        <div class="slabel">All exercises</div>
+        <div id="str-log-list"></div>
+      </div>
+    </div>
+
+  </div><!-- end #content -->
+
+  <!-- Tab bar -->
+  <div id="tab-bar">
+    <button class="tab-btn active" onclick="showPanel('workout', this)">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h16"/><circle cx="4" cy="6.5" r="1.5"/><circle cx="20" cy="6.5" r="1.5"/><circle cx="4" cy="17.5" r="1.5"/><circle cx="20" cy="17.5" r="1.5"/></svg>
+      Workout
+    </button>
+    <button class="tab-btn" onclick="showPanel('meals', this)">
+      <svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+      Meals
+    </button>
+    <button class="tab-btn" onclick="showPanel('prep', this)">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+      Prep
+    </button>
+    <button class="tab-btn" onclick="showPanel('grocery', this)">
+      <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Grocery
+    </button>
+    <button class="tab-btn" onclick="showPanel('progress', this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </button>
+  </div>
+</div>
+
+<!-- Log modal -->
+<div class="modal-overlay hidden" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h3>Log weigh-in</h3>
+    <label>Date</label>
+    <input type="date" id="log-date">
+    <label>Weight (lbs)</label>
+    <input type="number" id="log-weight" placeholder="e.g. 158.5" step="0.1">
+    <label>Body fat % (optional)</label>
+    <input type="number" id="log-bf" placeholder="e.g. 22.5" step="0.1">
+    <label>Notes (optional)</label>
+    <input type="text" id="log-notes" placeholder="Feeling strong, etc.">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Strength modal -->
+<div class="modal-overlay hidden" id="str-modal" onclick="closeStrModalOutside(event)">
+  <div class="modal">
+    <h3>Log lift</h3>
+    <label>Date</label>
+    <input type="date" id="str-date">
+    <label>Exercise</label>
+    <select class="modal-ex-picker" id="str-exercise"></select>
+    <label>Sets</label>
+    <div class="set-rows" id="set-rows">
+      <div style="display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;padding:0 2px">
+        <div></div>
+        <div style="font-size:11px;color:var(--text3);font-weight:600;text-align:center">REPS</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:600;text-align:center">WEIGHT (lbs)</div>
+      </div>
+    </div>
+    <button class="add-set-btn" onclick="addSetRow()">+ Add set</button>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeStrModal()">Cancel</button>
+      <button class="btn-save" onclick="saveStrEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Navigation ---
+const headers = { workout: 'Workout', meals: 'Meals', prep: 'Meal prep', grocery: 'Grocery list', progress: 'Progress' };
+const subs = { workout: 'PPL · 6 days/week', meals: '1,950 kcal · 185g protein', prep: 'Sunday batch cook', grocery: 'Weekly shopping list', progress: 'Track your body composition' };
+
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('content').scrollTop = 0;
+  document.getElementById('header-sub').textContent = subs[id];
+  document.getElementById('header').querySelector('h1').textContent = id === 'progress' ? 'Progress' : 'My Fitness Plan';
+}
+
+// Set today's header
+document.getElementById('header-sub').textContent = subs['workout'];
+
+// --- Sub-tabs (Progress) ---
+function showSubTab(id, btn) {
+  document.getElementById('subpanel-body').style.display = id === 'body' ? '' : 'none';
+  document.getElementById('subpanel-strength').style.display = id === 'strength' ? '' : 'none';
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (id === 'strength') renderStrLog();
+}
+
+// --- Grocery ---
+function toggleGroc(row) {
+  row.classList.toggle('done');
+  updateGrocProgress();
+  saveGrocState();
+}
+function updateGrocProgress() {
+  const total = document.querySelectorAll('.groc-row').length;
+  const done = document.querySelectorAll('.groc-row.done').length;
+  document.getElementById('groc-prog').textContent = done + ' of ' + total + ' checked';
+}
+function clearGroc() {
+  document.querySelectorAll('.groc-row').forEach(r => r.classList.remove('done'));
+  updateGrocProgress();
+  saveGrocState();
+}
+function saveGrocState() {
+  const rows = document.querySelectorAll('.groc-row');
+  const state = Array.from(rows).map(r => r.classList.contains('done'));
+  try { localStorage.setItem('groc', JSON.stringify(state)); } catch(e) {}
+}
+function loadGrocState() {
+  try {
+    const state = JSON.parse(localStorage.getItem('groc') || '[]');
+    const rows = document.querySelectorAll('.groc-row');
+    rows.forEach((r, i) => { if (state[i]) r.classList.add('done'); });
+    updateGrocProgress();
+  } catch(e) {}
+}
+
+// --- Progress ---
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem('progress_entries') || '[]'); } catch(e) { return []; }
+}
+function saveEntries(entries) {
+  try { localStorage.setItem('progress_entries', JSON.stringify(entries)); } catch(e) {}
+}
+
+function renderLog() {
+  const entries = getEntries().slice().reverse();
+  const list = document.getElementById('log-list');
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty-state">No entries yet.<br>Tap <strong>+ Log entry</strong> to record your first weigh-in.</div>';
+    document.getElementById('stat-weight').textContent = '—';
+    document.getElementById('stat-bf').textContent = '—';
+    document.getElementById('stat-weight-delta').textContent = 'No entries yet';
+    document.getElementById('stat-weight-delta').className = 'sc-delta neu';
+    return;
+  }
+
+  // Update stat cards
+  const latest = entries[entries.length - 1]; // most recent (entries stored oldest first)
+  document.getElementById('stat-weight').textContent = parseFloat(latest.weight).toFixed(1);
+  document.getElementById('stat-bf').textContent = latest.bf ? parseFloat(latest.bf).toFixed(1) : '—';
+
+  const wDiff = parseFloat(latest.weight) - 160;
+  const wEl = document.getElementById('stat-weight-delta');
+  if (wDiff < 0) {
+    wEl.textContent = wDiff.toFixed(1) + ' lbs from start';
+    wEl.className = 'sc-delta pos';
+  } else if (wDiff > 0) {
+    wEl.textContent = '+' + wDiff.toFixed(1) + ' lbs from start';
+    wEl.className = 'sc-delta neg';
+  } else {
+    wEl.textContent = 'Same as start';
+    wEl.className = 'sc-delta neu';
+  }
+
+  const bfEl = document.getElementById('stat-bf-delta');
+  if (latest.bf) {
+    const bfDiff = parseFloat(latest.bf) - 25;
+    if (bfDiff < 0) {
+      bfEl.textContent = bfDiff.toFixed(1) + '% from start · Goal: 12–15%';
+      bfEl.className = 'sc-delta pos';
+    } else {
+      bfEl.textContent = 'Goal: 12–15%';
+      bfEl.className = 'sc-delta neu';
+    }
+  } else {
+    bfEl.textContent = 'Goal: 12–15%';
+    bfEl.className = 'sc-delta neu';
+  }
+
+  // Render log entries
+  let html = '<div class="log-block"><div class="log-block-head">All entries</div>';
+  entries.forEach((e, i) => {
+    const d = new Date(e.date + 'T12:00:00');
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    html += `<div class="log-entry">
+      <div>
+        <div class="log-date">${dateStr}</div>
+        ${e.notes ? `<div style="font-size:12px;color:var(--text3);margin-top:3px">${e.notes}</div>` : ''}
+      </div>
+      <div class="log-vals">
+        <div class="log-col"><div class="lv-label">Weight</div><span>${parseFloat(e.weight).toFixed(1)} lbs</span></div>
+        ${e.bf ? `<div class="log-col"><div class="lv-label">BF%</div><span>${parseFloat(e.bf).toFixed(1)}%</span></div>` : ''}
+        <button onclick="deleteEntry(${entries.length - 1 - i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px 0 4px 8px;line-height:1">×</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function deleteEntry(idx) {
+  const entries = getEntries();
+  entries.splice(idx, 1);
+  saveEntries(entries);
+  renderLog();
+}
+
+function openModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('log-date').value = today;
+  document.getElementById('log-weight').value = '';
+  document.getElementById('log-bf').value = '';
+  document.getElementById('log-notes').value = '';
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+function saveEntry() {
+  const date = document.getElementById('log-date').value;
+  const weight = document.getElementById('log-weight').value;
+  if (!date || !weight) { alert('Date and weight are required.'); return; }
+  const entry = { date, weight, bf: document.getElementById('log-bf').value, notes: document.getElementById('log-notes').value };
+  const entries = getEntries();
+  entries.push(entry);
+  entries.sort((a, b) => a.date.localeCompare(b.date));
+  saveEntries(entries);
+  closeModal();
+  renderLog();
+}
+
+// --- Strength Log ---
+const EXERCISES = [
+  { name: 'Incline barbell press', type: 'push' },
+  { name: 'Cable fly (low to high)', type: 'push' },
+  { name: 'Dips', type: 'push' },
+  { name: 'Shoulder press machine', type: 'push' },
+  { name: 'Lateral raise', type: 'push' },
+  { name: 'Tricep rope pushdown', type: 'push' },
+  { name: 'Pull-ups / Lat pulldown', type: 'pull' },
+  { name: 'T-bar row', type: 'pull' },
+  { name: 'Cable row (close grip)', type: 'pull' },
+  { name: 'Reverse pec deck', type: 'pull' },
+  { name: 'Standing preacher curl', type: 'pull' },
+  { name: 'Incline dumbbell curl', type: 'pull' },
+  { name: 'Barbell squat', type: 'legs' },
+  { name: 'Leg press', type: 'legs' },
+  { name: 'Romanian deadlift', type: 'legs' },
+  { name: 'Leg curl (machine)', type: 'legs' },
+  { name: 'Back extensions', type: 'legs' },
+  { name: 'Calf raise (standing)', type: 'legs' },
+];
+
+function getStrEntries() {
+  try { return JSON.parse(localStorage.getItem('strength_entries') || '{}'); } catch(e) { return {}; }
+}
+function saveStrEntries(data) {
+  try { localStorage.setItem('strength_entries', JSON.stringify(data)); } catch(e) {}
+}
+
+function openStrModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('str-date').value = today;
+  // Populate exercise picker
+  const sel = document.getElementById('str-exercise');
+  sel.innerHTML = EXERCISES.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  // Reset sets to 3 default rows
+  const rows = document.getElementById('set-rows');
+  // Keep header row, rebuild set rows
+  const header = rows.children[0];
+  rows.innerHTML = '';
+  rows.appendChild(header);
+  for (let i = 0; i < 3; i++) addSetRow();
+  document.getElementById('str-modal').classList.remove('hidden');
+}
+function closeStrModal() {
+  document.getElementById('str-modal').classList.add('hidden');
+}
+function closeStrModalOutside(e) {
+  if (e.target === document.getElementById('str-modal')) closeStrModal();
+}
+
+let setCount = 0;
+function addSetRow() {
+  setCount++;
+  const n = document.getElementById('set-rows').querySelectorAll('.set-row').length + 1;
+  const div = document.createElement('div');
+  div.className = 'set-row';
+  div.innerHTML = `<div class="set-num">${n}</div><input type="number" placeholder="—" min="1" max="100" class="set-reps"><input type="number" placeholder="—" min="0" step="2.5" class="set-weight">`;
+  document.getElementById('set-rows').appendChild(div);
+}
+
+function saveStrEntry() {
+  const date = document.getElementById('str-date').value;
+  const exercise = document.getElementById('str-exercise').value;
+  if (!date || !exercise) return;
+  const setRows = document.getElementById('set-rows').querySelectorAll('.set-row');
+  const sets = [];
+  setRows.forEach(row => {
+    const reps = row.querySelector('.set-reps').value;
+    const weight = row.querySelector('.set-weight').value;
+    if (reps || weight) sets.push({ reps: reps || '—', weight: weight || '—' });
+  });
+  if (sets.length === 0) { alert('Add at least one set.'); return; }
+  const data = getStrEntries();
+  if (!data[exercise]) data[exercise] = [];
+  // Remove existing entry for same date
+  data[exercise] = data[exercise].filter(e => e.date !== date);
+  data[exercise].push({ date, sets });
+  data[exercise].sort((a, b) => a.date.localeCompare(b.date));
+  saveStrEntries(data);
+  closeStrModal();
+  renderStrLog();
+}
+
+function deleteStrEntry(exercise, date) {
+  const data = getStrEntries();
+  if (!data[exercise]) return;
+  data[exercise] = data[exercise].filter(e => e.date !== date);
+  saveStrEntries(data);
+  renderStrLog();
+}
+
+function bestSet(sets) {
+  // Best = highest weight, ties broken by reps
+  let best = null;
+  sets.forEach(s => {
+    const w = parseFloat(s.weight) || 0;
+    const r = parseFloat(s.reps) || 0;
+    if (!best || w > best.w || (w === best.w && r > best.r)) best = { w, r, weight: s.weight, reps: s.reps };
+  });
+  return best;
+}
+
+function renderStrLog() {
+  const data = getStrEntries();
+  const container = document.getElementById('str-log-list');
+  let html = '';
+  EXERCISES.forEach(ex => {
+    const entries = data[ex.name] || [];
+    html += `<div class="str-ex-block">
+      <div class="str-ex-head">
+        <span class="str-ex-name">${ex.name}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="str-ex-badge ${ex.type}">${ex.type}</span>
+          <button class="str-log-btn" onclick="quickLogEx('${ex.name.replace(/'/g,"\\'")}')">+ Log</button>
+        </div>
+      </div>`;
+    if (entries.length === 0) {
+      html += `<div class="str-empty">No entries yet</div>`;
+    } else {
+      // Show last 2 entries, most recent first
+      const shown = entries.slice(-2).reverse();
+      shown.forEach((entry, i) => {
+        const d = new Date(entry.date + 'T12:00:00');
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const setsStr = entry.sets.map(s => `${s.reps}×${s.weight}lb`).join('  ');
+        const best = bestSet(entry.sets);
+        // Compare to previous entry for delta
+        let deltaHtml = '';
+        if (i === 0 && shown.length > 1) {
+          const prevBest = bestSet(shown[1].sets);
+          if (prevBest && best) {
+            const diff = best.w - prevBest.w;
+            if (diff > 0) deltaHtml = `<div class="str-delta up">▲ +${diff} lbs vs prev</div>`;
+            else if (diff < 0) deltaHtml = `<div class="str-delta down">▼ ${diff} lbs vs prev</div>`;
+            else deltaHtml = `<div class="str-delta same">= Same as prev</div>`;
+          }
+        } else if (i === 0) {
+          deltaHtml = `<div class="str-delta same">First entry</div>`;
+        }
+        html += `<div class="str-entry-row">
+          <div>
+            <div class="str-entry-date">${dateStr}${i === 0 ? ' · <span style="color:var(--blue)">latest</span>' : ''}</div>
+            <div class="str-entry-sets">${setsStr}</div>
+          </div>
+          <div class="str-entry-right">
+            <div class="str-best">${best ? best.w + ' lbs' : '—'}</div>
+            ${deltaHtml}
+          </div>
+          <button onclick="deleteStrEntry('${ex.name.replace(/'/g,"\\'")}','${entry.date}')" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px 0 4px 10px;line-height:1;flex-shrink:0">×</button>
+        </div>`;
+      });
+      if (entries.length > 2) {
+        html += `<div style="padding:8px 14px;font-size:12px;color:var(--text3)">+ ${entries.length - 2} older entries hidden</div>`;
+      }
+    }
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+function quickLogEx(name) {
+  openStrModal();
+  // Set picker to this exercise
+  const sel = document.getElementById('str-exercise');
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === name) { sel.selectedIndex = i; break; }
+  }
+}
+
+// Init
+loadGrocState();
+renderLog();
+renderStrLog();
+</script>
+</body>
+</html>
