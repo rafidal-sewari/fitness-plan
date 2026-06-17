@@ -170,12 +170,13 @@
   /* ── TAB BAR ── */
   #tab-bar {
     flex-shrink: 0;
-    padding: 10px 16px calc(12px + var(--safe-bottom));
+    padding: 10px 16px calc(16px + var(--safe-bottom));
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     background: transparent;
+    overflow: visible;
   }
   #tab-bar::before {
     content: '';
@@ -197,9 +198,10 @@
     flex-wrap: nowrap;
     user-select: none;
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    touch-action: none;
     /* flat */
     background: rgba(28,28,30,0.9);
     backdrop-filter: blur(28px) saturate(200%);
@@ -749,6 +751,7 @@ function _tabBtnIndex(btn) {
     const dx = Math.abs(t.clientX - _tabDrag.startX);
     if (dx > 6) _tabDrag.dragging = true;
     if (!_tabDrag.dragging) return;
+    e.preventDefault();
     const btns = Array.from(inner.querySelectorAll('.tab-btn'));
     const innerRect = inner.getBoundingClientRect();
     const x = t.clientX - innerRect.left + inner.scrollLeft;
@@ -760,7 +763,7 @@ function _tabBtnIndex(btn) {
       _tabDrag.lastBtn = btn;
       if (_tabOnSelect) _tabOnSelect(snapped);
     }
-  }, { passive: true });
+  }, { passive: false });
 
   inner.addEventListener('touchend', e => {
     if (!_tabDrag) return;
@@ -1023,18 +1026,8 @@ function _setScrubPosition(fractionalIdx) {
     b.style.color = isActive ? '#fff' : '';
   });
   _updatePill(fractionalIdx, false);
-
-  // Auto-scroll tab bar
-  const inner = document.getElementById('tab-bar-inner');
-  const pill = document.getElementById('tab-pill');
-  if (pill && inner) {
-    const pillLeft = parseFloat(pill.style.left) || 0;
-    const pillWidth = parseFloat(pill.style.width) || 0;
-    const pillCenter = pillLeft + pillWidth / 2;
-    const innerWidth = inner.offsetWidth;
-    const targetScroll = pillCenter - innerWidth / 2;
-    inner.scrollLeft = Math.max(0, targetScroll);
-  }
+  // Note: intentionally NOT auto-scrolling the bar here — while the user is
+  // actively dragging, only the pill should move. The bar itself stays put.
 }
 
 function transitionViews(outEl, inEl, direction) {
