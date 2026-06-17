@@ -202,7 +202,7 @@
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    touch-action: none;
+    touch-action: pan-x;
     /* flat */
     background: rgba(28,28,30,0.9);
     backdrop-filter: blur(28px) saturate(200%);
@@ -952,13 +952,15 @@ function _tabBtnIndex(btn) {
     const dx = Math.abs(t.clientX - _tabDrag.startX);
     if (dx > 6) _tabDrag.dragging = true;
     if (!_tabDrag.dragging) return;
-    e.preventDefault();
+    // Do NOT preventDefault — let touch-action:pan-x handle native scrolling
+    // so the user can swipe to reveal hidden tabs (Thu–Sun).
+    // We still update the pill scrub position based on scroll-adjusted coords.
     const btns = Array.from(inner.querySelectorAll('.tab-btn'));
     const innerRect = inner.getBoundingClientRect();
     const x = t.clientX - innerRect.left + inner.scrollLeft;
     const fracIdx = _computeFracIdx(btns, x, innerRect);
     _setScrubPosition(fracIdx);
-  }, { passive: false });
+  }, { passive: true });
 
   inner.addEventListener('touchend', e => {
     if (!_tabDrag) return;
