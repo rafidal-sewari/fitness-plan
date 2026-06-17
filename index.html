@@ -195,7 +195,8 @@
     border-radius: 100px;
     padding: 4px;
     gap: 2px;
-    max-width: calc(100vw - 32px - 62px - 62px);
+    max-width: calc(100vw - 32px - 62px - 16px);
+    flex: 1;
     flex-wrap: nowrap;
     user-select: none;
     overflow-x: auto;
@@ -231,7 +232,8 @@
   #tab-bar-inner::-webkit-scrollbar { display: none; }
   .tab-btn {
     flex-shrink: 0;
-    width: 78px;
+    flex: 1;
+    min-width: 52px;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 7px 8px;
@@ -1257,6 +1259,7 @@ function setActiveTab(idx, animate = true) {
 
 function _setScrubPosition(fractionalIdx) {
   _pillIdx = fractionalIdx;
+  const inner = document.getElementById('tab-bar-inner');
   const btns = Array.from(document.querySelectorAll('#tab-bar-inner .tab-btn'));
   const rounded = Math.round(fractionalIdx);
   btns.forEach((b, i) => {
@@ -1265,8 +1268,20 @@ function _setScrubPosition(fractionalIdx) {
     b.style.color = isActive ? '#fff' : '';
   });
   _updatePill(fractionalIdx, false);
-  // Note: intentionally NOT auto-scrolling the bar here — while the user is
-  // actively dragging, only the pill should move. The bar itself stays put.
+
+  // Scroll the tab bar so the active tab is always visible
+  if (inner && btns[rounded]) {
+    const btn = btns[rounded];
+    const btnLeft = btn.offsetLeft;
+    const btnRight = btnLeft + btn.offsetWidth;
+    const barLeft = inner.scrollLeft;
+    const barRight = barLeft + inner.offsetWidth;
+    if (btnLeft < barLeft + 8) {
+      inner.scrollTo({ left: btnLeft - 8, behavior: 'smooth' });
+    } else if (btnRight > barRight - 8) {
+      inner.scrollTo({ left: btnRight - inner.offsetWidth + 8, behavior: 'smooth' });
+    }
+  }
 }
 
 function transitionViews(outEl, inEl, direction) {
