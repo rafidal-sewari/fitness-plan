@@ -196,7 +196,6 @@
     padding: 4px;
     gap: 2px;
     max-width: calc(100vw - 32px - 62px - 16px);
-    flex: 1;
     flex-wrap: nowrap;
     user-select: none;
     overflow-x: auto;
@@ -232,8 +231,7 @@
   #tab-bar-inner::-webkit-scrollbar { display: none; }
   .tab-btn {
     flex-shrink: 0;
-    flex: 1;
-    min-width: 52px;
+    width: 56px;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 7px 8px;
@@ -1533,10 +1531,12 @@ function _morphInnerToContent(renderFn) {
   // 2. Swap in the new content
   renderFn();
 
-  // 3. Measure the natural width the new content wants, then snap back to
-  //    the locked starting width so we can animate the difference
+  // 3. Measure the natural width the new content wants, clamped to available space
   inner.style.width = 'auto';
-  const targetWidth = inner.getBoundingClientRect().width;
+  const naturalWidth = inner.getBoundingClientRect().width;
+  // Max available = full bar width minus FAB (52px) minus gap (10px) minus bar padding (16px each side)
+  const maxAvail = document.getElementById('tab-bar').getBoundingClientRect().width - 52 - 10 - 32;
+  const targetWidth = Math.min(naturalWidth, maxAvail);
   inner.style.width = startWidth + 'px';
   inner.getBoundingClientRect(); // force layout
   inner.style.transition = '';
@@ -1546,8 +1546,7 @@ function _morphInnerToContent(renderFn) {
     inner.style.width = targetWidth + 'px';
   });
 
-  // 5. Once the animation finishes, release the locked width so the pill
-  //    goes back to sizing itself naturally (e.g. on window resize)
+  // 5. Once the animation finishes, release the locked width
   inner.addEventListener('transitionend', function cleanup(e) {
     if (e.propertyName !== 'width') return;
     inner.style.width = '';
