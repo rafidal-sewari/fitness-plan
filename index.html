@@ -225,9 +225,10 @@
   #tab-bar-inner::-webkit-scrollbar { display: none; }
   .tab-btn {
     flex-shrink: 0;
+    width: 78px;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    padding: 7px 15px;
+    padding: 7px 8px;
     gap: 2px;
     border: none; background: none;
     color: rgba(255,255,255,0.35);
@@ -757,12 +758,6 @@ function _tabBtnIndex(btn) {
     const x = t.clientX - innerRect.left + inner.scrollLeft;
     const fracIdx = _computeFracIdx(btns, x, innerRect);
     _setScrubPosition(fracIdx);
-    const snapped = Math.round(fracIdx);
-    const btn = btns[snapped];
-    if (btn && btn !== _tabDrag.lastBtn) {
-      _tabDrag.lastBtn = btn;
-      if (_tabOnSelect) _tabOnSelect(snapped);
-    }
   }, { passive: false });
 
   inner.addEventListener('touchend', e => {
@@ -776,6 +771,7 @@ function _tabBtnIndex(btn) {
     } else {
       const snapped = Math.round(_pillIdx);
       setActiveTab(snapped, true);
+      if (_tabOnSelect) _tabOnSelect(snapped);
     }
     _tabDrag = null;
   }, { passive: true });
@@ -797,12 +793,6 @@ function _tabBtnIndex(btn) {
     const x = e.clientX - innerRect.left + inner2.scrollLeft;
     const fracIdx = _computeFracIdx(btns, x, innerRect);
     _setScrubPosition(fracIdx);
-    const snapped = Math.round(fracIdx);
-    const btn = btns[snapped];
-    if (btn && btn !== _tabDrag.lastBtn) {
-      _tabDrag.lastBtn = btn;
-      if (_tabOnSelect) _tabOnSelect(snapped);
-    }
   });
 
   window.addEventListener('mouseup', e => {
@@ -815,6 +805,7 @@ function _tabBtnIndex(btn) {
     } else {
       const snapped = Math.round(_pillIdx);
       setActiveTab(snapped, true);
+      if (_tabOnSelect) _tabOnSelect(snapped);
     }
     _tabDrag = null;
   });
@@ -846,6 +837,18 @@ function _computeFracIdx(btns, xRelativeToInnerWithScroll, innerRect) {
   return fracIdx;
 }
 
+// Wires a card-carousel scroll container so the tab pill / active-tab
+// highlighting live-tracks the swipe in real time, matching the position of
+// whichever card is currently centered as you drag through the carousel.
+function _wireCardScrollSync(scroll, totalCards) {
+  scroll.addEventListener('scroll', () => {
+    const maxScroll = scroll.scrollWidth - scroll.offsetWidth;
+    const frac = maxScroll > 0 ? (scroll.scrollLeft / maxScroll) * (totalCards - 1) : 0;
+    const clamped = Math.max(0, Math.min(frac, totalCards - 1));
+    _setScrubPosition(clamped);
+  }, { passive: true });
+}
+
 function renderDayTabs() {
   const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -862,19 +865,9 @@ function renderDayTabs() {
     inner.appendChild(btn);
   });
 
-  // Sync pill from day card scroll
-  scroll.addEventListener('scroll', () => {
-    const btns = Array.from(inner.querySelectorAll('.tab-btn'));
-    const lastBtn = btns[btns.length - 1];
-    const totalCards = days.length;
-    // Use card width from actual card elements
-    const firstCard = scroll.querySelector('.day-card');
-    const cardW = firstCard ? (firstCard.offsetWidth + 12) : (scroll.offsetWidth * 0.8 + 12);
-    const maxScroll = scroll.scrollWidth - scroll.offsetWidth;
-    const frac = maxScroll > 0 ? (scroll.scrollLeft / maxScroll) * (totalCards - 1) : 0;
-    const clamped = Math.max(0, Math.min(frac, totalCards - 1));
-    _setScrubPosition(clamped);
-  }, { passive: true });
+  // Sync pill from day card scroll — pill/highlight live-track the swipe
+  // in real time as the user drags through the day cards.
+  _wireCardScrollSync(scroll, days.length);
 
   _tabOnSelect = (idx) => {
     const cards = scroll.children;
@@ -895,17 +888,11 @@ function renderExTabs(exercises) {
     const typeClass = ex.shoulder ? 't-legs' : `t-${ex.type}`;
     const btn = document.createElement('button');
     btn.className = `tab-btn ${typeClass}`;
-    btn.innerHTML = `<div class="tab-label" style="font-size:10px;max-width:72px;overflow:hidden;text-overflow:ellipsis">${short}</div>`;
+    btn.innerHTML = `<div class="tab-label" style="font-size:10px;max-width:62px;overflow:hidden;text-overflow:ellipsis">${short}</div>`;
     inner.appendChild(btn);
   });
 
-  scroll.addEventListener('scroll', () => {
-    const totalCards = exercises.length;
-    const maxScroll = scroll.scrollWidth - scroll.offsetWidth;
-    const frac = maxScroll > 0 ? (scroll.scrollLeft / maxScroll) * (totalCards - 1) : 0;
-    const clamped = Math.max(0, Math.min(frac, totalCards - 1));
-    _setScrubPosition(clamped);
-  }, { passive: true });
+  _wireCardScrollSync(scroll, exercises.length);
 
   _tabOnSelect = (idx) => {
     const cards = scroll.children;
@@ -1009,10 +996,26 @@ function setActiveTab(idx, animate = true) {
     const pillLeft = parseFloat(pill.style.left) || 0;
     const pillWidth = parseFloat(pill.style.width) || 0;
     const pillCenter = pillLeft + pillWidth / 2;
-    const innerWidth = inner.offsetWidth;
+    const barWidth = inner.offsetWidth;
     // scroll to center the pill in view
-    const targetScroll = pillCenter - innerWidth / 2;
+    const targetScroll = pillCenter - barWidth / 2;
     inner.scrollTo({ left: Math.max(0, targetScroll), behavior: animate ? 'smooth' : 'instant' });
+
+    // Re-measure and snap the pill into its exact final position once the
+    // scroll has settled. This guards against any timing drift between the
+    // initial _updatePill() call (above) and the scroll animation, so the
+    // pill always ends up precisely centered on its tab regardless of when
+    // layout/scroll settles.
+    const resync = () => _updatePill(_pillIdx, false);
+    if (animate) {
+      if ('onscrollend' in window) {
+        inner.addEventListener('scrollend', resync, { once: true });
+      } else {
+        setTimeout(resync, 360);
+      }
+    } else {
+      resync();
+    }
   }
 }
 
