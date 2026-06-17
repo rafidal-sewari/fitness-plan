@@ -174,6 +174,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
     position: relative;
     background: transparent;
     overflow: visible;
@@ -194,7 +195,7 @@
     border-radius: 100px;
     padding: 4px;
     gap: 2px;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px - 62px - 62px);
     flex-wrap: nowrap;
     user-select: none;
     overflow-x: auto;
@@ -208,7 +209,12 @@
     -webkit-backdrop-filter: blur(28px) saturate(200%);
     border: 0.5px solid rgba(255,255,255,0.12);
     box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.5);
-    transition: background 0.35s, box-shadow 0.35s, border-color 0.35s;
+    transition: background 0.35s, box-shadow 0.35s, border-color 0.35s,
+                width  0.46s cubic-bezier(0.4,0,0.2,1),
+                height 0.46s cubic-bezier(0.4,0,0.2,1),
+                border-radius 0.46s cubic-bezier(0.4,0,0.2,1),
+                min-width 0.46s cubic-bezier(0.4,0,0.2,1);
+    /* height is normally 'auto' — we lock it via JS before animating */
   }
   body.theme-glass #tab-bar-inner {
     background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)), rgba(30,30,32,0.45);
@@ -549,6 +555,159 @@
     --radius-btn:  18px;
     --radius-input:14px;
   }
+
+  /* ── FOOD FAB (LEFT side, slides to center when open) ── */
+  #food-fab {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.35s ease, box-shadow 0.35s ease, transform 0.18s ease;
+    background: var(--bg3);
+    border: 0.5px solid rgba(255,255,255,0.14);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+  }
+  body.theme-glass #food-fab {
+    background: linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 0.5px solid rgba(255,255,255,0.2);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 8px 28px rgba(0,0,0,0.5);
+  }
+  #food-fab:active { transform: scale(0.92); }
+  #food-fab svg {
+    width: 24px; height: 24px;
+    transition: opacity 0.2s ease, transform 0.24s cubic-bezier(0.34,1.1,0.64,1);
+    position: absolute;
+    fill: none;
+    stroke: var(--text2);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  #food-fab .fab-icon-food  { opacity: 1; transform: rotate(0deg) scale(1); }
+  /* X close icon — hidden by default, shown when nutrition panel is open */
+  #food-fab .fab-icon-close { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+  body.food-open #food-fab .fab-icon-food  { opacity: 0; transform: scale(0.5); }
+  body.food-open #food-fab .fab-icon-close { opacity: 1; transform: scale(1) rotate(0deg); transition-delay: 0.22s; }
+
+  /* ── tab-bar-inner stays a pill at all times — its CONTENT swaps between ── */
+  /* workout day/exercise tabs and the nutrition tabs (food/grocery/weight). */
+  /* The width transition below lets it smoothly resize whenever the number  */
+  /* of buttons inside it changes (e.g. 7 day tabs → 3 nutrition tabs).      */
+  #tab-bar-inner {
+    overflow: hidden;
+    transition: background 0.35s, box-shadow 0.35s, border-color 0.35s,
+                width  0.46s cubic-bezier(0.4,0,0.2,1),
+                height 0.46s cubic-bezier(0.4,0,0.2,1),
+                border-radius 0.46s cubic-bezier(0.4,0,0.2,1),
+                min-width 0.46s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── Reversed layout when nutrition panel is open ── */
+  /* Normally: [food-fab circle (left)] [tab-bar-inner pill (right)].        */
+  /* When open: [tab-bar-inner pill (left, nutrition tabs)] [food-fab circle */
+  /* showing an X to close (right)] — same pieces, swapped order.            */
+  body.food-open #tab-bar-inner { order: 1; }
+  body.food-open #food-fab      { order: 2; }
+
+  /* Nutrition tab buttons (Food Log / Grocery List / Weight Log) — sized to */
+  /* fit their label instead of the fixed 78px day/exercise tab width.       */
+  .tab-btn.food-tab {
+    width: auto;
+    padding: 9px 16px;
+    white-space: nowrap;
+  }
+
+  /* ── FOOD PANEL ── */
+
+  #food-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.38s cubic-bezier(0.4,0,0.2,1), transform 0.38s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    padding-top: calc(12px + var(--safe-top));
+    padding-bottom: calc(16px + var(--safe-bottom));
+    padding-left: 20px;
+    padding-right: 20px;
+    will-change: opacity, transform;
+    /* flat */
+    background: var(--bg);
+  }
+  body.theme-glass #food-panel {
+    background: var(--bg);
+  }
+  body.food-open #food-panel {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  #food-panel-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #food-panel-title svg {
+    width: 20px; height: 20px;
+    stroke: var(--amber); fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .food-placeholder-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    opacity: 0.4;
+  }
+  .food-placeholder-section svg {
+    width: 44px; height: 44px;
+    stroke: var(--text3); fill: none;
+    stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .food-placeholder-section p {
+    font-size: 14px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  /* ── Switchable nutrition sub-views (Food Log / Grocery List / Weight Log) ── */
+  #food-views {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .food-view {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+  }
+  .food-view.active { display: flex; }
+
 </style>
 </head>
 <body>
@@ -582,14 +741,53 @@
     <div id="view-exercises" class="view">
       <div id="ex-scroll" class="ex-scroll"></div>
     </div>
+
+    <!-- Food panel -->
+    <div id="food-panel">
+      <div id="food-panel-title">
+        <svg viewBox="0 0 24 24"><path d="M3 2v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3zm0 0v7"/></svg>
+        Nutrition
+      </div>
+      <div id="food-views">
+        <div class="food-view active" id="food-view-foodlog">
+          <div class="food-placeholder-section">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+            <p>Food tracking<br>will live here</p>
+          </div>
+        </div>
+        <div class="food-view" id="food-view-grocery">
+          <div class="food-placeholder-section">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <p>Grocery list<br>will live here</p>
+          </div>
+        </div>
+        <div class="food-view" id="food-view-weight">
+          <div class="food-placeholder-section">
+            <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            <p>Weight log<br>will live here</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="tab-bar">
+    <button id="food-fab" onclick="handleFoodFabClick()" aria-label="Food tracker">
+      <!-- food icon (default) -->
+      <svg class="fab-icon-food" viewBox="0 0 24 24">
+        <path d="M3 2v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/>
+        <line x1="7" y1="2" x2="7" y2="22"/>
+        <path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3zm0 0v7"/>
+      </svg>
+      <!-- X close icon, shown when nutrition panel is open -->
+      <svg class="fab-icon-close" viewBox="0 0 24 24" stroke-width="2">
+        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+    </button>
     <div id="tab-bar-inner"></div>
   </div>
 </div>
-
-<!-- Theme Toggle -->
 <div id="theme-toggle-wrap">
   <span id="theme-toggle-label">Flat</span>
   <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
@@ -903,12 +1101,46 @@ function renderExTabs(exercises) {
   setActiveTab(0);
 }
 
+// ── Nutrition tabs (Food Log / Grocery List / Weight Log) ────────────────────
+const FOOD_TABS = [
+  { id: 'foodlog', label: 'Food Log' },
+  { id: 'grocery', label: 'Grocery List' },
+  { id: 'weight',  label: 'Weight Log' },
+];
+
+function renderFoodTabs() {
+  const inner = document.getElementById('tab-bar-inner');
+  inner.innerHTML = '';
+
+  FOOD_TABS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn food-tab';
+    btn.innerHTML = `<div class="tab-label">${t.label}</div>`;
+    inner.appendChild(btn);
+  });
+
+  _tabOnSelect = (idx) => {
+    setActiveTab(idx);
+    showFoodView(FOOD_TABS[idx].id);
+  };
+
+  setActiveTab(0, false);
+  showFoodView(FOOD_TABS[0].id);
+}
+
+function showFoodView(id) {
+  document.querySelectorAll('.food-view').forEach(v => {
+    v.classList.toggle('active', v.id === `food-view-${id}`);
+  });
+}
+
 // ── Sliding pill ─────────────────────────────────────────────────────────────
 const TAB_COLORS = {
   't-push': [10,  132, 255, 0.30],
   't-pull': [48,  209,  88, 0.26],
   't-legs': [255, 159,  10, 0.28],
   't-rest': [255, 255, 255, 0.09],
+  'food-tab':[255, 255, 255, 0.16],
   'default':[255, 255, 255, 0.11],
 };
 
@@ -1248,6 +1480,75 @@ function closeReplaceModal() {
 
 function closeReplaceModalOutside(e) {
   if (e.target === document.getElementById('replace-modal')) closeReplaceModal();
+}
+
+// ── Food panel ───────────────────────────────────────────────────────────────
+function toggleFoodPanel() {
+  if (document.body.classList.contains('food-open')) {
+    closeFoodPanel();
+  } else {
+    openFoodPanel();
+  }
+}
+
+function handleFoodFabClick() {
+  // food-fab now does double duty: opens the panel when closed,
+  // and closes it (showing an X) when open.
+  toggleFoodPanel();
+}
+
+// Morphs #tab-bar-inner's width smoothly from its current size to whatever
+// size the newly-rendered content (renderFn) naturally needs — used both
+// when opening (workout tabs → nutrition tabs) and closing (nutrition tabs →
+// workout tabs) so the pill always resizes instead of snapping instantly.
+function _morphInnerToContent(renderFn) {
+  const inner = document.getElementById('tab-bar-inner');
+
+  // 1. Lock the current pixel width so we have a starting point to animate from
+  const startWidth = inner.getBoundingClientRect().width;
+  inner.style.transition = 'none';
+  inner.style.width = startWidth + 'px';
+  inner.style.minWidth = '0';
+  inner.getBoundingClientRect(); // force layout
+
+  // 2. Swap in the new content
+  renderFn();
+
+  // 3. Measure the natural width the new content wants, then snap back to
+  //    the locked starting width so we can animate the difference
+  inner.style.width = 'auto';
+  const targetWidth = inner.getBoundingClientRect().width;
+  inner.style.width = startWidth + 'px';
+  inner.getBoundingClientRect(); // force layout
+  inner.style.transition = '';
+
+  // 4. Animate to the target width on the next frame
+  requestAnimationFrame(() => {
+    inner.style.width = targetWidth + 'px';
+  });
+
+  // 5. Once the animation finishes, release the locked width so the pill
+  //    goes back to sizing itself naturally (e.g. on window resize)
+  inner.addEventListener('transitionend', function cleanup(e) {
+    if (e.propertyName !== 'width') return;
+    inner.style.width = '';
+    inner.style.minWidth = '';
+    inner.removeEventListener('transitionend', cleanup);
+  }, { once: true });
+}
+
+function openFoodPanel() {
+  document.body.classList.add('food-open');
+  _morphInnerToContent(renderFoodTabs);
+}
+
+function closeFoodPanel() {
+  document.body.classList.remove('food-open');
+  if (currentDay) {
+    _morphInnerToContent(() => renderExTabs(ROUTINES[currentDay].exercises));
+  } else {
+    _morphInnerToContent(renderDayTabs);
+  }
 }
 
 function updateHeaderDate() {
