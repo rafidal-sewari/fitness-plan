@@ -2212,6 +2212,23 @@ function updateHeaderDate() {
 updateHeaderDate();
 renderDayCards();
 renderDayTabs();
+
+// Scroll to today's day on load
+(function scrollToToday() {
+  const JS_DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const todayName = JS_DAY_NAMES[new Date().getDay()];
+  const todayIdx = DAY_ORDER.indexOf(todayName);
+  if (todayIdx === -1) return;
+  // Use requestAnimationFrame so the DOM has finished painting before we scroll
+  requestAnimationFrame(() => {
+    const scroll = document.querySelector('.day-scroll');
+    const cards = scroll ? scroll.children : [];
+    if (cards[todayIdx]) {
+      cards[todayIdx].scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
+    }
+    setActiveTab(todayIdx, false);
+  });
+})();
 </script>
 </body>
 </html>
