@@ -132,6 +132,23 @@
     color: var(--text2);
   }
 
+  /* ── Split toggle button ── */
+  #split-toggle {
+    width: 44px;
+    height: 26px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.35s ease;
+    background: rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 8px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+  }
+  body.theme-glass #split-toggle {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 10px rgba(0,0,0,0.3);
+  }
+
   /* ── HEADER ── */
   #header {
     padding: 12px 20px 14px;
@@ -347,6 +364,10 @@
   .day-card.pull .wd-type { color: var(--green); }
   .day-card.legs { background: linear-gradient(145deg, rgba(255,159,10,0.16) 0%, rgba(255,159,10,0.05) 100%); border-color: rgba(255,159,10,0.2); }
   .day-card.legs .wd-type { color: var(--amber); }
+  .day-card.upper { background: linear-gradient(145deg, rgba(10,132,255,0.18) 0%, rgba(10,132,255,0.06) 100%); border-color: rgba(10,132,255,0.2); }
+  .day-card.upper .wd-type { color: var(--blue); }
+  .day-card.lower { background: linear-gradient(145deg, rgba(255,159,10,0.16) 0%, rgba(255,159,10,0.05) 100%); border-color: rgba(255,159,10,0.2); }
+  .day-card.lower .wd-type { color: var(--amber); }
   /* flat rest */
   body:not(.theme-glass) .day-card.rest { background: var(--bg2); border-color: var(--border); }
   body:not(.theme-glass) .day-card.rest .wd-type { color: var(--text3); }
@@ -400,9 +421,13 @@
   .ex-card.push { border-color: rgba(10,132,255,0.2); }
   .ex-card.pull { border-color: rgba(48,209,88,0.18); }
   .ex-card.legs { border-color: rgba(255,159,10,0.18); }
+  .ex-card.upper { border-color: rgba(10,132,255,0.2); }
+  .ex-card.lower { border-color: rgba(255,159,10,0.18); }
   body.theme-glass .ex-card.push { border-color: rgba(10,132,255,0.28); }
   body.theme-glass .ex-card.pull { border-color: rgba(48,209,88,0.24); }
   body.theme-glass .ex-card.legs { border-color: rgba(255,159,10,0.24); }
+  body.theme-glass .ex-card.upper { border-color: rgba(10,132,255,0.28); }
+  body.theme-glass .ex-card.lower { border-color: rgba(255,159,10,0.24); }
 
   /* ── ADD EXERCISE CARD (end of exercise carousel) ── */
   .add-ex-card {
@@ -670,6 +695,8 @@
   .daytype-btn.active.t-push { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }
   .daytype-btn.active.t-pull { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
   .daytype-btn.active.t-legs { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
+  .daytype-btn.active.t-upper { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }
+  .daytype-btn.active.t-lower { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
   .daytype-btn.active.t-rest { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.26); color: var(--text); }
   body.theme-glass .daytype-btn { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .settings-done-btn {
@@ -939,6 +966,16 @@
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Workout Split</div>
+      <div class="settings-row">
+        <span class="settings-row-label" id="split-system-label">Push/Pull/Legs</span>
+        <div class="theme-row-switch">
+          <button id="split-toggle" onclick="toggleSplitSystem()" aria-label="Toggle split system" style="display:flex;align-items:center;justify-content:center"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Workout Days</div>
       <div id="settings-day-list"></div>
     </div>
@@ -1086,17 +1123,22 @@ const ALL_EXERCISES = [
 
 // ── Day-type settings ─────────────────────────────────────────────────────────
 // Lets the user reassign what kind of workout day each weekday is (Push/Pull/
-// Legs/Rest) from the Settings panel. Changing a day's type swaps in a
+// Legs/Rest or Upper/Lower/Rest) from the Settings panel. Changing a day's type swaps in a
 // generic template for that type; days the user never touches keep their
 // original hand-tuned routine from ROUTINES above.
 const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const DAY_ABBR  = { Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat', Sunday:'Sun' };
-const DAY_TYPES = ['push','pull','legs','rest'];
+
+function getDAY_TYPES() {
+  return SPLIT_SYSTEMS[currentSplitSystem].types;
+}
 
 const TYPE_INFO = {
   push: { label: 'Push', sub: 'chest focus', title: 'Chest · Shoulders · Triceps' },
   pull: { label: 'Pull', sub: 'back focus',  title: 'Back · Biceps · Rear delt' },
   legs: { label: 'Legs', sub: 'leg focus',   title: 'Quads · Hamstrings · Calves' },
+  upper: { label: 'Upper', sub: 'upper body', title: 'Chest · Back · Shoulders' },
+  lower: { label: 'Lower', sub: 'lower body', title: 'Quads · Hamstrings · Calves' },
   rest: { label: 'Rest', sub: '',            title: 'Recovery' },
 };
 
@@ -1125,10 +1167,33 @@ const TYPE_EXERCISES = {
     { name: 'Romanian deadlift', type: 'legs' },
     { name: 'Calf raise', type: 'legs' },
   ],
+  upper: [
+    { name: 'Incline barbell press', type: 'upper' },
+    { name: 'Pull-ups (or lat pulldown)', type: 'upper' },
+    { name: 'Dumbbell bench press', type: 'upper' },
+    { name: 'T-bar row', type: 'upper' },
+    { name: 'Shoulder press machine', type: 'upper', shoulder: true },
+    { name: 'Face pull', type: 'upper', shoulder: true },
+  ],
+  lower: [
+    { name: 'Barbell squat', type: 'lower' },
+    { name: 'Leg press', type: 'lower' },
+    { name: 'Leg curl', type: 'lower' },
+    { name: 'Romanian deadlift', type: 'lower' },
+    { name: 'Calf raise', type: 'lower' },
+  ],
   rest: [],
 };
 
 const DAY_OVERRIDES_KEY = 'fitlog-day-overrides';
+const SPLIT_SYSTEM_KEY = 'fitlog-split-system';
+
+let currentSplitSystem = localStorage.getItem(SPLIT_SYSTEM_KEY) || 'ppl'; // 'ppl' or 'ul'
+
+const SPLIT_SYSTEMS = {
+  ppl: { label: 'Push/Pull/Legs', types: ['push', 'pull', 'legs', 'rest'] },
+  ul: { label: 'Upper/Lower', types: ['upper', 'lower', 'rest'] }
+};
 
 function getDayOverrides() {
   try { return JSON.parse(localStorage.getItem(DAY_OVERRIDES_KEY) || '{}'); }
@@ -1174,11 +1239,55 @@ function renderDayCards() {
     const typeLabel = TYPE_INFO[r.badge].label;
     return `<div class="day-card ${r.badge}" onclick="selectDay('${day}')"><div class="wd-name">${DAY_ABBR[day]}</div><div class="wd-type">${typeLabel}</div>${subHtml}</div>`;
   }).join('');
+  
+  // Attach swipe-left listener to day-scroll for navigation to nutrition
+  _attachDayScrollSwipeListener();
+}
+
+// Swipe-left on week view (day cards) to navigate to nutrition
+function _attachDayScrollSwipeListener() {
+  const scroll = document.querySelector('.day-scroll');
+  if (!scroll || scroll._swipeListenerAttached) return;
+  
+  let touchStart = null;
+  
+  scroll.addEventListener('touchstart', (e) => {
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  
+  scroll.addEventListener('touchend', (e) => {
+    if (!touchStart) return;
+    const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    const deltaX = touchStart.x - touchEnd.x;
+    const deltaY = Math.abs(touchStart.y - touchEnd.y);
+    
+    // Swipe left (positive deltaX) with minimal vertical movement
+    if (deltaX > 50 && deltaY < 80) {
+      openFoodPanel();
+    }
+    touchStart = null;
+  }, { passive: true });
+  
+  scroll._swipeListenerAttached = true;
 }
 
 // ── Settings modal ────────────────────────────────────────────────────────────
 function openSettings() {
   renderSettingsDayList();
+  
+  // Update split system label and button
+  const label = document.getElementById('split-system-label');
+  const btn = document.getElementById('split-toggle');
+  if (label) label.textContent = SPLIT_SYSTEMS[currentSplitSystem].label;
+  if (btn) {
+    btn.style.background = currentSplitSystem === 'ul' ? 'var(--blue)' : 'rgba(255,255,255,0.12)';
+    if (currentSplitSystem === 'ul') {
+      btn.innerHTML = '<span style="font-size:12px;font-weight:600;color:white">UL</span>';
+    } else {
+      btn.innerHTML = '<span style="font-size:12px;font-weight:600;color:var(--text2)">PPL</span>';
+    }
+  }
+  
   document.getElementById('settings-modal').classList.add('open');
 }
 
@@ -1260,11 +1369,69 @@ function _settingsDragEnd() {
   window.addEventListener('mouseup', () => _settingsDragEnd());
 })();
 
+function toggleSplitSystem() {
+  currentSplitSystem = currentSplitSystem === 'ppl' ? 'ul' : 'ppl';
+  localStorage.setItem(SPLIT_SYSTEM_KEY, currentSplitSystem);
+  
+  // Update button appearance immediately
+  const label = document.getElementById('split-system-label');
+  const btn = document.getElementById('split-toggle');
+  if (label) label.textContent = SPLIT_SYSTEMS[currentSplitSystem].label;
+  if (btn) {
+    btn.style.background = currentSplitSystem === 'ul' ? 'var(--blue)' : 'rgba(255,255,255,0.12)';
+    if (currentSplitSystem === 'ul') {
+      btn.innerHTML = '<span style="font-size:12px;font-weight:600;color:white">UL</span>';
+    } else {
+      btn.innerHTML = '<span style="font-size:12px;font-weight:600;color:var(--text2)">PPL</span>';
+    }
+  }
+  
+  applySplitSystemToAllDays();
+  renderSettingsDayList();
+  renderDayCards();
+  renderDayTabs();
+  if (currentDay) {
+    renderExerciseCards(currentDay);
+    renderExTabs(ROUTINES[currentDay].exercises);
+  }
+}
+
+function applySplitSystemToAllDays() {
+  const overrides = getDayOverrides();
+  const currentTypes = Object.keys(overrides).map(day => overrides[day]);
+  
+  // Map old types to new types based on split system
+  Object.keys(overrides).forEach(day => {
+    const oldType = overrides[day];
+    let newType = oldType;
+    
+    if (currentSplitSystem === 'ul') {
+      // Convert PPL to Upper/Lower
+      if (oldType === 'push' || oldType === 'pull') {
+        newType = 'upper';
+      } else if (oldType === 'legs') {
+        newType = 'lower';
+      }
+    } else if (currentSplitSystem === 'ppl') {
+      // Keep as is or convert from Upper/Lower to PPL
+      if (oldType === 'upper') {
+        newType = 'push'; // Default to push for upper days
+      } else if (oldType === 'lower') {
+        newType = 'legs'; // Default to legs for lower days
+      }
+    }
+    
+    applyDayType(day, newType, false);
+  });
+  
+  saveDayOverrides(overrides);
+}
+
 function renderSettingsDayList() {
   const list = document.getElementById('settings-day-list');
   list.innerHTML = DAY_ORDER.map(day => {
     const current = ROUTINES[day].badge;
-    const buttons = DAY_TYPES.map(t => {
+    const buttons = getDAY_TYPES().map(t => {
       const active = t === current ? `active t-${t}` : '';
       return `<button class="daytype-btn ${active}" onclick="changeDayType('${day}','${t}')">${TYPE_INFO[t].label}</button>`;
     }).join('');
@@ -1543,6 +1710,8 @@ const TAB_COLORS = {
   't-push': [10,  132, 255, 0.30],
   't-pull': [48,  209,  88, 0.26],
   't-legs': [255, 159,  10, 0.28],
+  't-upper': [10,  132, 255, 0.30],
+  't-lower': [255, 159,  10, 0.28],
   't-rest': [255, 255, 255, 0.09],
   'food-tab':[255, 255, 255, 0.16],
   'default':[255, 255, 255, 0.11],
@@ -1782,13 +1951,7 @@ function renderExerciseCards(day) {
     card.innerHTML = `
       <div class="ex-card-header">
         <div class="ex-card-name">${ex.name}</div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
-          <div style="display:flex;gap:6px">
-            <button style="background:rgba(255,255,255,0.07);color:var(--text2);border:0.5px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="openReplaceModal('${ex.name.replace(/'/g,"\\'")}', ${idx})">Replace</button>
-            <button style="background:rgba(255,69,58,0.12);color:var(--red);border:0.5px solid rgba(255,69,58,0.28);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="removeExercise(${idx}, '${ex.name.replace(/'/g,"\\'")}')">Remove</button>
-          </div>
-        </div>
+        <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
       </div>
       <div class="ex-card-body">
         <div class="ex-date-row">
@@ -1802,6 +1965,10 @@ function renderExerciseCards(day) {
         <button class="add-set-btn" onclick="addSetToCard('${cardId}')">+ Add Set</button>
         ${prevHtml}
         <button class="ex-save-btn" onclick="saveCardEntry('${cardId}', '${ex.name.replace(/'/g,"\\'")}')">Save Entry</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button style="flex:1;background:rgba(255,255,255,0.07);color:var(--text2);border:0.5px solid var(--border2);border-radius:20px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="openReplaceModal('${ex.name.replace(/'/g,"\\'")}', ${idx})">Replace</button>
+        <button style="flex:1;background:rgba(255,69,58,0.12);color:var(--red);border:0.5px solid rgba(255,69,58,0.28);border-radius:20px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="removeExercise(${idx}, '${ex.name.replace(/'/g,"\\'")}')">Remove</button>
       </div>
     `;
     container.appendChild(card);
