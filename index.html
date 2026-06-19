@@ -475,7 +475,19 @@
   .ex-card-badge.legs     { background: var(--amber-bg); color: var(--amber); border: 0.5px solid var(--amber-border); }
   .ex-card-badge.shoulder { background: var(--amber-bg); color: var(--amber); border: 0.5px solid var(--amber-border); }
 
-  .ex-card-body { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+  .ex-card-body { flex: 1; overflow-y: auto; padding: 16px 18px 16px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; min-height: 0; }
+  .ex-card-footer {
+    flex-shrink: 0;
+    background: var(--bg3);
+    border-top: 0.5px solid var(--border2);
+    position: relative; z-index: 1;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  body.theme-glass .ex-card-footer {
+    background: rgba(255,255,255,0.04);
+    border-top-color: rgba(255,255,255,0.10);
+  }
+  .ex-card-footer-empty { display: none; }
   .ex-card-body::-webkit-scrollbar { display: none; }
 
   .ex-date-row { display: flex; align-items: center; gap: 10px; }
@@ -495,26 +507,58 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
   }
 
+  /* ── STEPPER SET ROWS ── */
   .set-table { display: flex; flex-direction: column; gap: 8px; }
-  .set-table-head { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; }
-  .set-table-head div { font-size: 11px; color: var(--text3); font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
-  .set-table-row { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; align-items: center; }
-  .set-table-num { font-size: 13px; color: var(--text3); font-weight: 600; text-align: center; }
-  .set-table-row input {
-    border-radius: var(--radius-input);
-    color: var(--text); font-size: 17px; font-weight: 500; padding: 12px 8px;
-    width: 100%; appearance: none; -webkit-appearance: none; text-align: center;
-    font-family: inherit;
-    /* flat */
-    background: var(--bg3); border: 0.5px solid var(--border2);
-    transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
+  .set-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg3); border-radius: 16px;
+    border: 0.5px solid var(--border2);
+    padding: 10px 10px 10px 14px;
+    transition: background 0.35s, border-color 0.35s;
   }
-  body.theme-glass .set-table-row input {
-    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.14);
+  body.theme-glass .set-row {
+    background: rgba(255,255,255,0.055);
+    border-color: rgba(255,255,255,0.12);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
   }
-  .set-table-row input:focus { outline: none; border-color: var(--blue); background: rgba(10,132,255,0.06); }
+  .set-row-num {
+    font-size: 12px; font-weight: 700; color: var(--text3);
+    width: 18px; flex-shrink: 0; text-align: center;
+  }
+  .set-stepper-group { display: flex; align-items: center; gap: 6px; flex: 1; }
+  .set-stepper-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .set-stepper-label { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .set-stepper { display: flex; align-items: center; gap: 0; width: 100%; }
+  .stepper-btn {
+    width: 38px; height: 38px; flex-shrink: 0;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.09);
+    color: var(--text); font-size: 20px; font-weight: 300; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .stepper-btn:active { opacity: 0.55; background: rgba(255,255,255,0.18); }
+  body.theme-glass .stepper-btn { background: rgba(255,255,255,0.11); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
+  .stepper-val {
+    flex: 1; text-align: center;
+    font-size: 22px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.5px; line-height: 1;
+    cursor: text;
+  }
+  .stepper-val[contenteditable="true"]:focus { outline: none; color: var(--blue); }
+  .set-divider { width: 0.5px; height: 32px; background: var(--border2); flex-shrink: 0; margin: 0 2px; }
+  .set-row-del {
+    width: 30px; height: 30px; flex-shrink: 0; margin-left: 2px;
+    border: none; border-radius: 50%; background: none;
+    color: var(--text3); font-size: 18px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, background 0.15s, opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .set-row-del:active { color: var(--red); opacity: 0.7; }
 
   .add-set-btn {
     border-radius: var(--radius-btn);
@@ -546,13 +590,36 @@
   }
   .ex-save-btn:active { opacity: 0.75; }
 
-  .prev-section { border-top: 0.5px solid var(--border2); padding-top: 14px; }
-  .prev-section h4 { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
-  .prev-entry { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid rgba(255,255,255,0.05); }
+    /* ── PREVIOUS ENTRIES FOOTER ── */
+  .ex-card-footer {
+    flex-shrink: 0;
+    border-top: 0.5px solid var(--border2);
+    position: relative; z-index: 1;
+    transition: background 0.35s, border-color 0.35s;
+    overflow: hidden;
+  }
+  .prev-section {
+    padding: 4px 0 0;
+    background: none;
+    transition: background 0.35s;
+  }
+  body.theme-glass .prev-section {
+    background: none;
+  }
+  .prev-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .prev-section h4 { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin: 0; }
+  .prev-entries-list { display: flex; flex-direction: column; }
+  .prev-entry { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid rgba(255,255,255,0.05); }
   .prev-entry:last-child { border-bottom: none; }
-  .prev-entry-date { font-size: 13px; color: var(--text3); font-weight: 400; }
-  .prev-entry-sets { font-size: 13px; color: var(--text2); margin-top: 2px; }
-  .prev-entry-progress { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .prev-entry-date { font-size: 12px; color: var(--text3); font-weight: 500; }
+  .prev-entry-sets { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .prev-entry-progress { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .prev-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 18px 0; gap: 6px;
+  }
+  .prev-empty-icon { font-size: 22px; opacity: 0.3; }
+  .prev-empty-text { font-size: 12px; color: var(--text3); font-weight: 500; }
   .prev-entry-progress.up   { color: var(--green); background: var(--green-bg); }
   .prev-entry-progress.down { color: var(--red);   background: var(--red-bg); }
   .prev-entry-progress.same { color: var(--text3); background: rgba(255,255,255,0.06); }
@@ -871,6 +938,22 @@
   }
   .food-view.active { display: flex; }
 
+
+  /* ── EXERCISE ICON BUTTONS (replace / delete) ── */
+  .ex-icon-btn {
+    width: 30px; height: 30px; flex-shrink: 0;
+    border: none; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.08);
+    color: var(--text2);
+    transition: background 0.2s, color 0.2s, opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ex-icon-btn svg { width: 14px; height: 14px; }
+  .ex-icon-btn:active { opacity: 0.6; }
+  .ex-icon-btn-del { color: var(--red); background: rgba(255,69,58,0.10); }
+  body.theme-glass .ex-icon-btn { background: rgba(255,255,255,0.10); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18); }
+  body.theme-glass .ex-icon-btn-del { background: rgba(255,69,58,0.14); }
 </style>
 </head>
 <body>
@@ -1918,7 +2001,7 @@ function renderExerciseCards(day) {
     let prevHtml = '';
     if (shown.length > 0) {
       const safeName = ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      prevHtml = `<div class="prev-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h4 style="margin-bottom:0">Previous</h4><button style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0" onclick="clearEntries('${safeName}','${cardId}')">Clear All</button></div>`;
+      prevHtml = `<div class="prev-section"><div class="prev-section-head"><h4>Previous</h4><button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0;font-family:inherit;letter-spacing:0.02em" onclick="clearEntries('${safeName}','${cardId}')">Clear All</button></div>`;
       shown.forEach((entry, i) => {
         const d = new Date(entry.date + 'T12:00:00');
         const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1951,7 +2034,15 @@ function renderExerciseCards(day) {
     card.innerHTML = `
       <div class="ex-card-header">
         <div class="ex-card-name">${ex.name}</div>
-        <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-top:2px">
+          <button class="ex-icon-btn" title="Replace" data-exname="${ex.name.replace(/\`/g,'')}" data-exidx="${idx}" onclick="openReplaceModal(this.dataset.exname, parseInt(this.dataset.exidx))">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+          <button class="ex-icon-btn ex-icon-btn-del" title="Remove" data-exname="${ex.name.replace(/\`/g,'')}" data-exidx="${idx}" onclick="removeExercise(parseInt(this.dataset.exidx), this.dataset.exname)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+          <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
+        </div>
       </div>
       <div class="ex-card-body">
         <div class="ex-date-row">
@@ -1959,16 +2050,11 @@ function renderExerciseCards(day) {
           <input type="date" class="ex-date-input" value="${today}">
         </div>
         <div class="set-table">
-          <div class="set-table-head"><div>Set</div><div>Reps</div><div>Weight (lbs)</div></div>
           <div class="set-table-rows"></div>
         </div>
-        <button class="add-set-btn" onclick="addSetToCard('${cardId}')">+ Add Set</button>
+        <button class="add-set-btn" data-cardid="${cardId}" onclick="addSetToCard(this.dataset.cardid)">+ Add Set</button>
+        <button class="ex-save-btn" data-cardid="${cardId}" data-exname="${ex.name.replace(/\`/g,'')}" onclick="saveCardEntry(this.dataset.cardid, this.dataset.exname)">Save Entry</button>
         ${prevHtml}
-        <button class="ex-save-btn" onclick="saveCardEntry('${cardId}', '${ex.name.replace(/'/g,"\\'")}')">Save Entry</button>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:12px">
-        <button style="flex:1;background:rgba(255,255,255,0.07);color:var(--text2);border:0.5px solid var(--border2);border-radius:20px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="openReplaceModal('${ex.name.replace(/'/g,"\\'")}', ${idx})">Replace</button>
-        <button style="flex:1;background:rgba(255,69,58,0.12);color:var(--red);border:0.5px solid rgba(255,69,58,0.28);border-radius:20px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="removeExercise(${idx}, '${ex.name.replace(/'/g,"\\'")}')">Remove</button>
       </div>
     `;
     container.appendChild(card);
@@ -1986,28 +2072,91 @@ function renderExerciseCards(day) {
   container.appendChild(addCard);
 }
 
+function _stepperRow(cardId, n) {
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  row.innerHTML = `
+    <div class="set-row-num">${n}</div>
+    <div class="set-stepper-group">
+      <div class="set-stepper-wrap">
+        <div class="set-stepper-label">Reps</div>
+        <div class="set-stepper">
+          <button class="stepper-btn set-reps-dec" type="button">−</button>
+          <div class="stepper-val set-reps" contenteditable="true" inputmode="numeric">0</div>
+          <button class="stepper-btn set-reps-inc" type="button">+</button>
+        </div>
+      </div>
+      <div class="set-divider"></div>
+      <div class="set-stepper-wrap">
+        <div class="set-stepper-label">lbs</div>
+        <div class="set-stepper">
+          <button class="stepper-btn set-weight-dec" type="button">−</button>
+          <div class="stepper-val set-weight" contenteditable="true" inputmode="numeric">0</div>
+          <button class="stepper-btn set-weight-inc" type="button">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="set-row-del" type="button" title="Remove set">×</button>
+  `;
+
+  // Wire stepper buttons
+  const repsEl   = row.querySelector('.set-reps');
+  const weightEl = row.querySelector('.set-weight');
+
+  function getVal(el)       { return parseFloat(el.textContent) || 0; }
+  function setVal(el, v, step) {
+    const rounded = step === 2.5 ? Math.round(v / 2.5) * 2.5 : Math.round(v);
+    el.textContent = Math.max(0, rounded);
+  }
+
+  row.querySelector('.set-reps-dec').addEventListener('click', () => setVal(repsEl,   getVal(repsEl)   - 1,   1));
+  row.querySelector('.set-reps-inc').addEventListener('click', () => setVal(repsEl,   getVal(repsEl)   + 1,   1));
+  row.querySelector('.set-weight-dec').addEventListener('click', () => setVal(weightEl, getVal(weightEl) - 2.5, 2.5));
+  row.querySelector('.set-weight-inc').addEventListener('click', () => setVal(weightEl, getVal(weightEl) + 2.5, 2.5));
+
+  // Inline edit: select all on focus, clamp on blur
+  [repsEl, weightEl].forEach((el, i) => {
+    const step = i === 0 ? 1 : 2.5;
+    el.addEventListener('focus', () => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    });
+    el.addEventListener('blur', () => setVal(el, getVal(el), step));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+  });
+
+  // Delete row — renumber remaining rows
+  row.querySelector('.set-row-del').addEventListener('click', () => {
+    const card = document.getElementById(cardId);
+    row.remove();
+    card.querySelectorAll('.set-row .set-row-num').forEach((el, i) => el.textContent = i + 1);
+  });
+
+  return row;
+}
+
 function addSetToCard(cardId) {
   const card = document.getElementById(cardId);
   const rows = card.querySelector('.set-table-rows');
-  const n = rows.querySelectorAll('.set-table-row').length + 1;
-  const row = document.createElement('div');
-  row.className = 'set-table-row';
-  row.innerHTML = `<div class="set-table-num">${n}</div><input type="number" placeholder="—" min="1" max="100" class="set-reps"><input type="number" placeholder="—" min="0" step="2.5" class="set-weight">`;
-  rows.appendChild(row);
+  const n = rows.querySelectorAll('.set-row').length + 1;
+  rows.appendChild(_stepperRow(cardId, n));
 }
 
 function saveCardEntry(cardId, exerciseName) {
   const card = document.getElementById(cardId);
   const date = card.querySelector('.ex-date-input').value;
   if (!date) { alert('Pick a date.'); return; }
-  const setRows = card.querySelectorAll('.set-table-row');
+  const setRows = card.querySelectorAll('.set-row');
   const sets = [];
   setRows.forEach(row => {
-    const reps = row.querySelector('.set-reps').value;
-    const weight = row.querySelector('.set-weight').value;
-    if (reps || weight) sets.push({ reps: reps || '—', weight: weight || '—' });
+    const reps   = (row.querySelector('.set-reps').textContent   || '').trim();
+    const weight = (row.querySelector('.set-weight').textContent || '').trim();
+    const r = parseFloat(reps) || 0, w = parseFloat(weight) || 0;
+    if (r > 0 || w > 0) sets.push({ reps: r || '—', weight: w || '—' });
   });
-  if (sets.length === 0) { alert('Add at least one set.'); return; }
+  if (sets.length === 0) { alert('Add at least one set with reps or weight.'); return; }
   const data = getLogEntries();
   if (!data[exerciseName]) data[exerciseName] = [];
   data[exerciseName] = data[exerciseName].filter(e => e.date !== date);
