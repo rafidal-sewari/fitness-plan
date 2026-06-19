@@ -60,16 +60,35 @@
   /* ── APP SHELL ── */
   #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; position: relative; z-index: 1; }
 
-  /* ── THEME TOGGLE ── */
-  #theme-toggle-wrap {
+  /* ── SETTINGS BUTTON ── */
+  #settings-btn-wrap {
     position: fixed;
     top: calc(14px + var(--safe-top));
     right: 16px;
     z-index: 200;
+  }
+  #settings-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    background: rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 8px rgba(0,0,0,0.3);
+    transition: background 0.35s ease, opacity 0.15s;
   }
+  #settings-btn:active { opacity: 0.7; }
+  #settings-btn svg { width: 18px; height: 18px; stroke: var(--text2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  body.theme-glass #settings-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 10px rgba(0,0,0,0.3);
+  }
+
+  /* ── THEME ROW (inline switch, used inside Settings modal) ── */
+  .theme-row-switch { display: flex; align-items: center; gap: 8px; }
   #theme-toggle-label {
     font-size: 11px;
     font-weight: 600;
@@ -385,6 +404,32 @@
   body.theme-glass .ex-card.pull { border-color: rgba(48,209,88,0.24); }
   body.theme-glass .ex-card.legs { border-color: rgba(255,159,10,0.24); }
 
+  /* ── ADD EXERCISE CARD (end of exercise carousel) ── */
+  .add-ex-card {
+    border-radius: var(--radius-card);
+    flex-shrink: 0; width: 88vw;
+    scroll-snap-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    border: 1.5px dashed var(--border2);
+    background: rgba(255,255,255,0.025);
+    transition: opacity 0.15s, background 0.35s, border-color 0.35s;
+  }
+  .add-ex-card:active { opacity: 0.7; }
+  .add-ex-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.08);
+  }
+  .add-ex-icon svg { width: 26px; height: 26px; stroke: var(--text2); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  .add-ex-label { font-size: 15px; font-weight: 600; color: var(--text2); }
+  body.theme-glass .add-ex-card {
+    background: linear-gradient(165deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 100%);
+    border-color: rgba(255,255,255,0.2);
+  }
+
   .ex-card-header {
     padding: 18px 18px 14px;
     display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
@@ -550,6 +595,95 @@
   body.theme-glass .replace-modal-btns button { border: 0.5px solid rgba(255,255,255,0.16); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); }
   body.theme-glass .btn-cancel { background: rgba(255,255,255,0.08); color: var(--text2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); }
   body.theme-glass .btn-save   { background: linear-gradient(165deg, rgba(40,150,255,0.95), rgba(10,110,235,0.92)); color: #fff; box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 4px 14px rgba(10,132,255,0.35); }
+
+  /* ── SETTINGS MODAL ── */
+  .settings-modal {
+    position: fixed; inset: 0; z-index: 102;
+    display: flex; align-items: flex-end;
+    background: rgba(0,0,0,0);
+    transition: background 0.35s ease;
+    pointer-events: none;
+  }
+  .settings-modal.open { background: rgba(0,0,0,0.6); pointer-events: auto; }
+  .settings-modal-content {
+    border-radius: 16px 16px 0 0;
+    border-top: 0.5px solid rgba(255,255,255,0.14);
+    padding: 12px 20px 24px;
+    padding-bottom: calc(24px + var(--safe-bottom));
+    width: 100%;
+    max-height: 82vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), background 0.35s;
+    /* flat */
+    background: rgba(28,28,30,0.95);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+  }
+  .settings-modal.open .settings-modal-content { transform: translateY(0); }
+  body.theme-glass .settings-modal.open { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  body.theme-glass .settings-modal-content {
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)), rgba(26,26,30,0.55);
+    backdrop-filter: blur(44px) saturate(200%) brightness(1.1);
+    -webkit-backdrop-filter: blur(44px) saturate(200%) brightness(1.1);
+    border-radius: 24px 24px 0 0;
+    border-top: 0.5px solid rgba(255,255,255,0.22);
+    box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.4), 0 -8px 40px rgba(0,0,0,0.4);
+  }
+  .settings-modal-content::before {
+    content: ''; display: block; width: 36px; height: 5px;
+    background: rgba(255,255,255,0.25); border-radius: 3px; margin: 0 auto 20px;
+  }
+  .settings-modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 18px; letter-spacing: -0.2px; }
+  .settings-section { margin-bottom: 24px; }
+  .settings-section:last-child { margin-bottom: 4px; }
+  .settings-section-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0;
+  }
+  .settings-row-label { font-size: 15px; font-weight: 500; }
+  .settings-day-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  }
+  .settings-day-row:last-child { border-bottom: none; }
+  .settings-day-name { font-size: 14px; font-weight: 600; flex-shrink: 0; width: 38px; }
+  .daytype-group { display: flex; gap: 6px; flex-wrap: nowrap; }
+  .daytype-btn {
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    background: rgba(255,255,255,0.06);
+    color: var(--text2);
+    border: 0.5px solid var(--border2);
+    transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+    white-space: nowrap;
+  }
+  .daytype-btn:active { opacity: 0.7; }
+  .daytype-btn.active.t-push { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }
+  .daytype-btn.active.t-pull { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .daytype-btn.active.t-legs { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
+  .daytype-btn.active.t-rest { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.26); color: var(--text); }
+  body.theme-glass .daytype-btn { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .settings-done-btn {
+    width: 100%; padding: 15px; border-radius: var(--radius-btn);
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    font-family: inherit; margin-top: 6px;
+    background: var(--blue); color: #fff; border: none;
+    transition: opacity 0.15s;
+  }
+  .settings-done-btn:active { opacity: 0.75; }
+  body.theme-glass .settings-done-btn {
+    background: linear-gradient(165deg, rgba(40,150,255,0.95), rgba(10,110,235,0.92));
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 4px 14px rgba(10,132,255,0.35);
+  }
 
   /* Radius transitions for glass mode */
   body.theme-glass {
@@ -728,15 +862,7 @@
   <div id="content">
     <!-- VIEW: DAY CARDS -->
     <div id="view-days" class="view active">
-      <div class="day-scroll">
-        <div class="day-card push" onclick="selectDay('Monday')"><div class="wd-name">Mon</div><div class="wd-type">Push A</div><div class="wd-sub">chest first</div></div>
-        <div class="day-card pull" onclick="selectDay('Tuesday')"><div class="wd-name">Tue</div><div class="wd-type">Pull A</div><div class="wd-sub">back first</div></div>
-        <div class="day-card legs" onclick="selectDay('Wednesday')"><div class="wd-name">Wed</div><div class="wd-type">Legs A</div><div class="wd-sub">quads first</div></div>
-        <div class="day-card rest" onclick="selectDay('Thursday')"><div class="wd-name">Thu</div><div class="wd-type">Rest</div></div>
-        <div class="day-card push" onclick="selectDay('Friday')"><div class="wd-name">Fri</div><div class="wd-type">Push B</div><div class="wd-sub">shoulders first</div></div>
-        <div class="day-card pull" onclick="selectDay('Saturday')"><div class="wd-name">Sat</div><div class="wd-type">Pull B</div><div class="wd-sub">biceps first</div></div>
-        <div class="day-card legs" onclick="selectDay('Sunday')"><div class="wd-name">Sun</div><div class="wd-type">Legs B</div><div class="wd-sub">hamstrings first</div></div>
-      </div>
+      <div class="day-scroll"></div>
     </div>
 
     <!-- VIEW: EXERCISE CARDS -->
@@ -790,9 +916,35 @@
     <div id="tab-bar-inner"></div>
   </div>
 </div>
-<div id="theme-toggle-wrap">
-  <span id="theme-toggle-label">Flat</span>
-  <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+<div id="settings-btn-wrap">
+  <button id="settings-btn" onclick="openSettings()" aria-label="Settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </button>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="settings-modal" onclick="closeSettingsOutside(event)">
+  <div class="settings-modal-content">
+    <h3>Settings</h3>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Appearance</div>
+      <div class="settings-row">
+        <span class="settings-row-label">Theme</span>
+        <div class="theme-row-switch">
+          <span id="theme-toggle-label">Flat</span>
+          <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Workout Days</div>
+      <div id="settings-day-list"></div>
+    </div>
+
+    <button class="settings-done-btn" onclick="closeSettings()">Done</button>
+  </div>
 </div>
 
 <!-- Replace Exercise Modal -->
@@ -804,6 +956,19 @@
     <div class="replace-modal-btns">
       <button class="btn-cancel" onclick="closeReplaceModal()">Cancel</button>
       <button class="btn-save" onclick="confirmReplaceExercise()">Replace</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Exercise Modal -->
+<div id="add-exercise-modal" class="replace-modal hidden" onclick="closeAddExerciseModalOutside(event)">
+  <div class="replace-modal-content">
+    <h3>Add Exercise</h3>
+    <p>Choose an exercise to add to this day's workout.</p>
+    <select id="add-exercise-select"></select>
+    <div class="replace-modal-btns">
+      <button class="btn-cancel" onclick="closeAddExerciseModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmAddExercise()">Add</button>
     </div>
   </div>
 </div>
@@ -829,7 +994,7 @@ function toggleTheme() {
 applyTheme();
 
 // ── Data ────────────────────────────────────────────────────────────────────
-const ROUTINES = {
+let ROUTINES = {
   Monday: {
     label: 'Push A — Mon', badge: 'push', title: 'Chest · Shoulders · Triceps',
     exercises: [
@@ -896,6 +1061,10 @@ const ROUTINES = {
   }
 };
 
+// Load ROUTINES from localStorage if available, otherwise use defaults
+const savedRoutines = JSON.parse(localStorage.getItem('fitlog-routines') || 'null');
+if (savedRoutines) ROUTINES = savedRoutines;
+
 const ALL_EXERCISES = [
   { name: 'Incline barbell press', type: 'push' }, { name: 'Cable fly (low to high)', type: 'push' },
   { name: 'Dips', type: 'push' }, { name: 'Shoulder press machine', type: 'push' },
@@ -915,12 +1084,225 @@ const ALL_EXERCISES = [
   { name: 'Seated calf raise', type: 'legs' },
 ];
 
+// ── Day-type settings ─────────────────────────────────────────────────────────
+// Lets the user reassign what kind of workout day each weekday is (Push/Pull/
+// Legs/Rest) from the Settings panel. Changing a day's type swaps in a
+// generic template for that type; days the user never touches keep their
+// original hand-tuned routine from ROUTINES above.
+const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAY_ABBR  = { Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat', Sunday:'Sun' };
+const DAY_TYPES = ['push','pull','legs','rest'];
+
+const TYPE_INFO = {
+  push: { label: 'Push', sub: 'chest focus', title: 'Chest · Shoulders · Triceps' },
+  pull: { label: 'Pull', sub: 'back focus',  title: 'Back · Biceps · Rear delt' },
+  legs: { label: 'Legs', sub: 'leg focus',   title: 'Quads · Hamstrings · Calves' },
+  rest: { label: 'Rest', sub: '',            title: 'Recovery' },
+};
+
+// Generic exercise sets used whenever a day is (re)assigned a type via Settings.
+const TYPE_EXERCISES = {
+  push: [
+    { name: 'Incline barbell press', type: 'push' },
+    { name: 'Cable fly (low to high)', type: 'push' },
+    { name: 'Dips', type: 'push' },
+    { name: 'Shoulder press machine', type: 'push', shoulder: true },
+    { name: 'Lateral raise', type: 'push', shoulder: true },
+    { name: 'Tricep rope pushdown', type: 'push' },
+  ],
+  pull: [
+    { name: 'Pull-ups (or lat pulldown)', type: 'pull' },
+    { name: 'T-bar row', type: 'pull' },
+    { name: 'Cable row (close grip)', type: 'pull' },
+    { name: 'Reverse pec deck', type: 'pull' },
+    { name: 'Standing preacher curl', type: 'pull' },
+    { name: 'Incline dumbbell curl', type: 'pull' },
+  ],
+  legs: [
+    { name: 'Barbell squat', type: 'legs' },
+    { name: 'Leg press', type: 'legs' },
+    { name: 'Leg curl', type: 'legs' },
+    { name: 'Romanian deadlift', type: 'legs' },
+    { name: 'Calf raise', type: 'legs' },
+  ],
+  rest: [],
+};
+
+const DAY_OVERRIDES_KEY = 'fitlog-day-overrides';
+
+function getDayOverrides() {
+  try { return JSON.parse(localStorage.getItem(DAY_OVERRIDES_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+
+function saveDayOverrides(overrides) {
+  localStorage.setItem(DAY_OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
+// Reassigns `day` to `newType`, swapping in the generic template for that
+// type. Persists the change (unless persist === false, used when re-applying
+// saved overrides on page load).
+function applyDayType(day, newType, persist = true) {
+  const info = TYPE_INFO[newType];
+  ROUTINES[day] = {
+    label: newType === 'rest' ? `Rest — ${DAY_ABBR[day]}` : `${info.label} — ${DAY_ABBR[day]}`,
+    badge: newType,
+    title: info.title,
+    exercises: TYPE_EXERCISES[newType].map(ex => ({ ...ex })),
+  };
+  if (persist) {
+    const overrides = getDayOverrides();
+    overrides[day] = newType;
+    saveDayOverrides(overrides);
+  }
+}
+
+// Apply any previously-saved day-type overrides on top of the default ROUTINES.
+(function applySavedDayOverrides() {
+  const overrides = getDayOverrides();
+  Object.keys(overrides).forEach(day => {
+    if (DAY_ORDER.includes(day) && ROUTINES[day]) applyDayType(day, overrides[day], false);
+  });
+})();
+
+// Builds the horizontally-scrolling day cards from current ROUTINES state.
+function renderDayCards() {
+  const scroll = document.querySelector('.day-scroll');
+  scroll.innerHTML = DAY_ORDER.map(day => {
+    const r = ROUTINES[day];
+    const subHtml = r.badge === 'rest' ? '' : `<div class="wd-sub">${TYPE_INFO[r.badge].sub}</div>`;
+    const typeLabel = TYPE_INFO[r.badge].label;
+    return `<div class="day-card ${r.badge}" onclick="selectDay('${day}')"><div class="wd-name">${DAY_ABBR[day]}</div><div class="wd-type">${typeLabel}</div>${subHtml}</div>`;
+  }).join('');
+}
+
+// ── Settings modal ────────────────────────────────────────────────────────────
+function openSettings() {
+  renderSettingsDayList();
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function closeSettingsOutside(e) {
+  if (e.target === document.getElementById('settings-modal')) closeSettings();
+}
+
+// Swipe-down-to-dismiss: dragging down on the sheet (while its content is
+// scrolled to the top) follows the finger, and releasing past a small
+// threshold commits the close — same gesture as the iOS "drag handle" sheets,
+// but works from anywhere on the sheet, not just the handle.
+let _settingsDrag = null;
+
+function _settingsSheetEl() { return document.querySelector('.settings-modal-content'); }
+
+function _settingsDragStart(clientY) {
+  const sheet = _settingsSheetEl();
+  _settingsDrag = { startY: clientY, currentY: clientY, dragging: false, startScrollTop: sheet.scrollTop };
+}
+
+// Returns true if this gesture is being used to drag the sheet (so the
+// caller should suppress native scrolling for this move).
+function _settingsDragMove(clientY) {
+  if (!_settingsDrag) return false;
+  const sheet = _settingsSheetEl();
+  _settingsDrag.currentY = clientY;
+  const deltaY = clientY - _settingsDrag.startY;
+
+  if (!_settingsDrag.dragging) {
+    if (deltaY > 6 && sheet.scrollTop <= 0) {
+      _settingsDrag.dragging = true;
+    } else {
+      // Either scrolling up inside the list, or not enough movement yet —
+      // let the browser handle it natively.
+      return false;
+    }
+  }
+
+  const clamped = Math.max(0, deltaY);
+  sheet.style.transition = 'none';
+  sheet.style.transform = `translateY(${clamped}px)`;
+  return true;
+}
+
+function _settingsDragEnd() {
+  if (!_settingsDrag) return;
+  const sheet = _settingsSheetEl();
+  const wasDragging = _settingsDrag.dragging;
+  const deltaY = _settingsDrag.currentY - _settingsDrag.startY;
+  _settingsDrag = null;
+  sheet.style.transition = '';
+  sheet.style.transform = '';
+  if (wasDragging && deltaY > 110) closeSettings();
+}
+
+(function attachSettingsDragOnce() {
+  const sheet = _settingsSheetEl();
+
+  sheet.addEventListener('touchstart', e => {
+    _settingsDragStart(e.touches[0].clientY);
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    if (_settingsDragMove(e.touches[0].clientY)) e.preventDefault();
+  }, { passive: false });
+
+  sheet.addEventListener('touchend', () => _settingsDragEnd(), { passive: true });
+
+  sheet.addEventListener('mousedown', e => {
+    _settingsDragStart(e.clientY);
+  });
+  window.addEventListener('mousemove', e => {
+    if (_settingsDrag) _settingsDragMove(e.clientY);
+  });
+  window.addEventListener('mouseup', () => _settingsDragEnd());
+})();
+
+function renderSettingsDayList() {
+  const list = document.getElementById('settings-day-list');
+  list.innerHTML = DAY_ORDER.map(day => {
+    const current = ROUTINES[day].badge;
+    const buttons = DAY_TYPES.map(t => {
+      const active = t === current ? `active t-${t}` : '';
+      return `<button class="daytype-btn ${active}" onclick="changeDayType('${day}','${t}')">${TYPE_INFO[t].label}</button>`;
+    }).join('');
+    return `<div class="settings-day-row"><div class="settings-day-name">${DAY_ABBR[day]}</div><div class="daytype-group">${buttons}</div></div>`;
+  }).join('');
+}
+
+function changeDayType(day, newType) {
+  if (ROUTINES[day].badge === newType) return;
+  applyDayType(day, newType);
+  renderSettingsDayList();
+  renderDayCards();
+
+  if (currentDay === day) {
+    if (newType === 'rest') {
+      // Rest days have no exercises — back out of the now-empty exercise view.
+      closeSettings();
+      backToDays();
+    } else {
+      renderExerciseCards(day);
+      renderExTabs(ROUTINES[day].exercises);
+      animateHeader(ROUTINES[day].label, true);
+    }
+  } else if (currentDay === null) {
+    renderDayTabs();
+  }
+}
+
+
+
 let currentDay = null;
 let replaceExerciseName = null;
 let replaceCardIndex = null;
 
 function getLogEntries() { return JSON.parse(localStorage.getItem('fitlog-entries') || '{}'); }
 function saveLogEntries(data) { localStorage.setItem('fitlog-entries', JSON.stringify(data)); }
+function getRoutines() { return JSON.parse(localStorage.getItem('fitlog-routines') || 'null') || ROUTINES; }
+function saveRoutines() { localStorage.setItem('fitlog-routines', JSON.stringify(ROUTINES)); }
 
 // ── Tab drag-to-switch ───────────────────────────────────────────────────────
 let _tabDrag = null;
@@ -1051,25 +1433,35 @@ function _wireCardScrollSync(scroll, totalCards) {
   }, { passive: true });
 }
 
+// Figures out which card is currently centered/visible in a horizontally
+// scrolling carousel, based on its live scrollLeft — used to keep the tab
+// bar's active pill in sync with whatever card the carousel is actually
+// showing (e.g. after backing out of a view where the carousel kept its
+// previous scroll position instead of resetting to the first card).
+function _nearestCardIndex(scroll, totalCards) {
+  const maxScroll = scroll.scrollWidth - scroll.offsetWidth;
+  if (maxScroll <= 0) return 0;
+  const frac = (scroll.scrollLeft / maxScroll) * (totalCards - 1);
+  return Math.max(0, Math.min(Math.round(frac), totalCards - 1));
+}
+
 function renderDayTabs() {
-  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const subs = ['Push A','Pull A','Legs A','Rest','Push B','Pull B','Legs B'];
-  const types = ['t-push','t-pull','t-legs','t-rest','t-push','t-pull','t-legs'];
   const scroll = document.querySelector('.day-scroll');
   const inner = document.getElementById('tab-bar-inner');
   inner.innerHTML = '';
 
-  days.forEach((day, i) => {
+  DAY_ORDER.forEach(day => {
+    const r = ROUTINES[day];
     const btn = document.createElement('button');
-    btn.className = `tab-btn ${types[i]}`;
-    btn.innerHTML = `<div class="tab-label">${labels[i]}</div><div class="tab-sub">${subs[i]}</div>`;
+    btn.className = `tab-btn t-${r.badge}`;
+    const subText = r.badge === 'rest' ? 'Rest' : TYPE_INFO[r.badge].label;
+    btn.innerHTML = `<div class="tab-label">${DAY_ABBR[day]}</div><div class="tab-sub">${subText}</div>`;
     inner.appendChild(btn);
   });
 
   // Sync pill from day card scroll — pill/highlight live-track the swipe
   // in real time as the user drags through the day cards.
-  _wireCardScrollSync(scroll, days.length);
+  _wireCardScrollSync(scroll, DAY_ORDER.length);
 
   _tabOnSelect = (idx) => {
     const cards = scroll.children;
@@ -1077,7 +1469,9 @@ function renderDayTabs() {
     setActiveTab(idx);
   };
 
-  setActiveTab(0);
+  // Match the active tab to whichever day card the carousel is actually
+  // showing right now, instead of always defaulting to the first tab.
+  setActiveTab(_nearestCardIndex(scroll, DAY_ORDER.length), false);
 }
 
 function renderExTabs(exercises) {
@@ -1086,23 +1480,29 @@ function renderExTabs(exercises) {
   inner.innerHTML = '';
 
   exercises.forEach((ex, i) => {
-    const short = ex.name.split(' ').slice(0,2).join(' ');
     const typeClass = ex.shoulder ? 't-legs' : `t-${ex.type}`;
     const btn = document.createElement('button');
     btn.className = `tab-btn ${typeClass}`;
-    btn.innerHTML = `<div class="tab-label" style="font-size:10px;max-width:62px;overflow:hidden;text-overflow:ellipsis">${short}</div>`;
+    btn.innerHTML = `<div class="tab-label">${i + 1}</div>`;
     inner.appendChild(btn);
   });
 
-  _wireCardScrollSync(scroll, exercises.length);
+  // Matching "+" tab for the add-exercise card at the end of the carousel.
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tab-btn t-rest add-tab';
+  addBtn.innerHTML = `<div class="tab-label">+</div>`;
+  inner.appendChild(addBtn);
+
+  const totalTabs = exercises.length + 1;
+  _wireCardScrollSync(scroll, totalTabs);
+
+  setActiveTab(_nearestCardIndex(scroll, totalTabs), false);
 
   _tabOnSelect = (idx) => {
     const cards = scroll.children;
     if (cards[idx]) cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     setActiveTab(idx);
   };
-
-  setActiveTab(0);
 }
 
 // ── Nutrition tabs (Food Log / Grocery List / Weight Log) ────────────────────
@@ -1384,7 +1784,10 @@ function renderExerciseCards(day) {
         <div class="ex-card-name">${ex.name}</div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
           <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
-          <button style="background:rgba(255,255,255,0.07);color:var(--text2);border:0.5px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="openReplaceModal('${ex.name.replace(/'/g,"\\'")}', ${idx})">Replace</button>
+          <div style="display:flex;gap:6px">
+            <button style="background:rgba(255,255,255,0.07);color:var(--text2);border:0.5px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="openReplaceModal('${ex.name.replace(/'/g,"\\'")}', ${idx})">Replace</button>
+            <button style="background:rgba(255,69,58,0.12);color:var(--red);border:0.5px solid rgba(255,69,58,0.28);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:500;font-family:inherit;transition:opacity 0.15s" onclick="removeExercise(${idx}, '${ex.name.replace(/'/g,"\\'")}')">Remove</button>
+          </div>
         </div>
       </div>
       <div class="ex-card-body">
@@ -1404,6 +1807,16 @@ function renderExerciseCards(day) {
     container.appendChild(card);
     for (let i = 0; i < 3; i++) addSetToCard(cardId);
   });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'add-ex-card';
+  addCard.id = 'ex-add-card';
+  addCard.onclick = openAddExerciseModal;
+  addCard.innerHTML = `
+    <div class="add-ex-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="add-ex-label">Add Exercise</div>
+  `;
+  container.appendChild(addCard);
 }
 
 function addSetToCard(cardId) {
@@ -1469,6 +1882,24 @@ function bestSet(sets) {
   return best;
 }
 
+function removeExercise(idx, exerciseName) {
+  if (!confirm(`Remove "${exerciseName}" from this day's workout?`)) return;
+  ROUTINES[currentDay].exercises.splice(idx, 1);
+  saveRoutines();
+  renderExerciseCards(currentDay);
+  renderExTabs(ROUTINES[currentDay].exercises);
+  setTimeout(() => {
+    const cards = document.getElementById('ex-scroll').children;
+    // Land on whichever card now occupies this slot (or the previous one
+    // if the removed exercise was last), falling back to the add card.
+    const targetIdx = Math.max(0, Math.min(idx, ROUTINES[currentDay].exercises.length - 1));
+    if (cards[targetIdx]) {
+      cards[targetIdx].scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
+      setActiveTab(targetIdx, false);
+    }
+  }, 50);
+}
+
 function openReplaceModal(exerciseName, cardIdx) {
   replaceExerciseName = exerciseName;
   replaceCardIndex = cardIdx;
@@ -1485,6 +1916,7 @@ function confirmReplaceExercise() {
   if (!val) { alert('Select an exercise.'); return; }
   const newEx = ALL_EXERCISES.find(ex => ex.name === val);
   ROUTINES[currentDay].exercises[replaceCardIndex] = { ...newEx };
+  saveRoutines();
   closeReplaceModal();
   renderExerciseCards(currentDay);
   renderExTabs(ROUTINES[currentDay].exercises);
@@ -1497,6 +1929,41 @@ function closeReplaceModal() {
 
 function closeReplaceModalOutside(e) {
   if (e.target === document.getElementById('replace-modal')) closeReplaceModal();
+}
+
+function openAddExerciseModal() {
+  const existingNames = ROUTINES[currentDay].exercises.map(ex => ex.name);
+  const select = document.getElementById('add-exercise-select');
+  select.innerHTML = '<option value="">Select an exercise...</option>' +
+    ALL_EXERCISES.filter(ex => !existingNames.includes(ex.name))
+      .map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
+  document.getElementById('add-exercise-modal').classList.remove('hidden');
+}
+
+function confirmAddExercise() {
+  const val = document.getElementById('add-exercise-select').value;
+  if (!val) { alert('Select an exercise.'); return; }
+  const newEx = ALL_EXERCISES.find(ex => ex.name === val);
+  ROUTINES[currentDay].exercises.push({ ...newEx });
+  saveRoutines();
+  closeAddExerciseModal();
+  renderExerciseCards(currentDay);
+  renderExTabs(ROUTINES[currentDay].exercises);
+  // Scroll to the newly added exercise card and highlight its tab.
+  setTimeout(() => {
+    const newIdx = ROUTINES[currentDay].exercises.length - 1;
+    const cards = document.getElementById('ex-scroll').children;
+    if (cards[newIdx]) cards[newIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    setActiveTab(newIdx);
+  }, 50);
+}
+
+function closeAddExerciseModal() {
+  document.getElementById('add-exercise-modal').classList.add('hidden');
+}
+
+function closeAddExerciseModalOutside(e) {
+  if (e.target === document.getElementById('add-exercise-modal')) closeAddExerciseModal();
 }
 
 // ── Food panel ───────────────────────────────────────────────────────────────
@@ -1576,6 +2043,7 @@ function updateHeaderDate() {
   document.getElementById('header-sub').textContent = `${dayName} · ${date}`;
 }
 updateHeaderDate();
+renderDayCards();
 renderDayTabs();
 </script>
 </body>
