@@ -697,22 +697,24 @@
     display: flex; align-items: flex-end;
     background: rgba(0,0,0,0);
     transition: background 0.3s ease;
+    pointer-events: none;
   }
-  .replace-modal:not(.hidden) { background: rgba(0,0,0,0.6); }
-  .replace-modal.hidden { display: none; }
+  .replace-modal.open { background: rgba(0,0,0,0.6); pointer-events: auto; }
   .replace-modal-content {
     border-radius: 16px 16px 0 0;
     border-top: 0.5px solid rgba(255,255,255,0.14);
     padding: 12px 20px 24px;
     padding-bottom: calc(24px + var(--safe-bottom));
     width: 100%;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), background 0.35s;
     /* flat */
     background: rgba(28,28,30,0.95);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    transition: background 0.35s;
   }
-  body.theme-glass .replace-modal:not(.hidden) { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  .replace-modal.open .replace-modal-content { transform: translateY(0); }
+  body.theme-glass .replace-modal.open { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
   body.theme-glass .replace-modal-content {
     background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 40%, rgba(0,0,0,0.06) 100%), rgba(24,24,30,0.50);
     backdrop-filter: blur(32px) saturate(280%) brightness(1.14) contrast(1.05);
@@ -1036,6 +1038,14 @@
   .ex-icon-btn-del { color: var(--red); background: rgba(255,69,58,0.10); }
   body.theme-glass .ex-icon-btn { background: rgba(255,255,255,0.10); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18); }
   body.theme-glass .ex-icon-btn-del { background: rgba(255,69,58,0.14); }
+  @keyframes ex-icon-swap-spin {
+    0%   { transform: rotate(0deg)   scale(1); }
+    45%  { transform: rotate(190deg) scale(1.18); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .ex-icon-btn.swapping { background: var(--blue-bg); color: var(--blue); }
+  .ex-icon-btn.swapping svg { animation: ex-icon-swap-spin 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  body.theme-glass .ex-icon-btn.swapping { background: var(--blue-bg); }
 100% { transform: translate(10vw, -12vh) scale(1.08); }
   }
 </style>
@@ -1153,7 +1163,7 @@
 </div>
 
 <!-- Replace Exercise Modal -->
-<div id="replace-modal" class="replace-modal hidden" onclick="closeReplaceModalOutside(event)">
+<div id="replace-modal" class="replace-modal" onclick="closeReplaceModalOutside(event)">
   <div class="replace-modal-content">
     <h3>Replace Exercise</h3>
     <p id="replace-exercise-name"></p>
@@ -1166,7 +1176,7 @@
 </div>
 
 <!-- Add Exercise Modal -->
-<div id="add-exercise-modal" class="replace-modal hidden" onclick="closeAddExerciseModalOutside(event)">
+<div id="add-exercise-modal" class="replace-modal" onclick="closeAddExerciseModalOutside(event)">
   <div class="replace-modal-content">
     <h3>Add Exercise</h3>
     <p>Choose an exercise to add to this day's workout.</p>
@@ -2138,7 +2148,7 @@ function renderExerciseCards(day) {
           <span class="ex-card-badge ${badgeClass}">${badgeLabel}</span>
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-top:2px">
-          <button class="ex-icon-btn" title="Replace" data-exname="${ex.name.replace(/\`/g,'')}" data-exidx="${idx}" onclick="openReplaceModal(this.dataset.exname, parseInt(this.dataset.exidx))">
+          <button class="ex-icon-btn" title="Replace" data-exname="${ex.name.replace(/\`/g,'')}" data-exidx="${idx}" onclick="openReplaceModal(this.dataset.exname, parseInt(this.dataset.exidx), this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
           </button>
           <button class="ex-icon-btn ex-icon-btn-del" title="Remove" data-exname="${ex.name.replace(/\`/g,'')}" data-exidx="${idx}" onclick="removeExercise(parseInt(this.dataset.exidx), this.dataset.exname)">
@@ -2336,7 +2346,7 @@ function removeExercise(idx, exerciseName) {
   }, 50);
 }
 
-function openReplaceModal(exerciseName, cardIdx) {
+function openReplaceModal(exerciseName, cardIdx, btnEl) {
   replaceExerciseName = exerciseName;
   replaceCardIndex = cardIdx;
   document.getElementById('replace-exercise-name').textContent = `Currently: ${exerciseName}`;
@@ -2344,7 +2354,14 @@ function openReplaceModal(exerciseName, cardIdx) {
   select.innerHTML = '<option value="">Select a new exercise...</option>' +
     ALL_EXERCISES.filter(ex => ex.name !== exerciseName)
       .map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-  document.getElementById('replace-modal').classList.remove('hidden');
+  // Quick swap-spin on the tapped icon button for tactile feedback
+  if (btnEl) {
+    btnEl.classList.remove('swapping');
+    void btnEl.offsetWidth; // restart animation if clicked again quickly
+    btnEl.classList.add('swapping');
+    setTimeout(() => btnEl.classList.remove('swapping'), 500);
+  }
+  document.getElementById('replace-modal').classList.add('open');
 }
 
 function confirmReplaceExercise() {
@@ -2359,7 +2376,7 @@ function confirmReplaceExercise() {
 }
 
 function closeReplaceModal() {
-  document.getElementById('replace-modal').classList.add('hidden');
+  document.getElementById('replace-modal').classList.remove('open');
   replaceExerciseName = null; replaceCardIndex = null;
 }
 
@@ -2373,7 +2390,7 @@ function openAddExerciseModal() {
   select.innerHTML = '<option value="">Select an exercise...</option>' +
     ALL_EXERCISES.filter(ex => !existingNames.includes(ex.name))
       .map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-  document.getElementById('add-exercise-modal').classList.remove('hidden');
+  document.getElementById('add-exercise-modal').classList.add('open');
 }
 
 function confirmAddExercise() {
@@ -2395,7 +2412,7 @@ function confirmAddExercise() {
 }
 
 function closeAddExerciseModal() {
-  document.getElementById('add-exercise-modal').classList.add('hidden');
+  document.getElementById('add-exercise-modal').classList.remove('open');
 }
 
 function closeAddExerciseModalOutside(e) {
