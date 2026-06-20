@@ -1391,32 +1391,51 @@ function renderDayCards() {
   _attachDayScrollSwipeListener();
 }
 
-// Swipe-left on week view (day cards) to navigate to nutrition
+// Swipe-right past Monday (at scroll start) opens nutrition;
+// swipe-left on the nutrition panel closes it.
 function _attachDayScrollSwipeListener() {
   const scroll = document.querySelector('.day-scroll');
   if (!scroll || scroll._swipeListenerAttached) return;
-  
+
   let touchStart = null;
-  
+
   scroll.addEventListener('touchstart', (e) => {
     touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, { passive: true });
-  
+
   scroll.addEventListener('touchend', (e) => {
     if (!touchStart) return;
-    const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-    const deltaX = touchStart.x - touchEnd.x;
-    const deltaY = Math.abs(touchStart.y - touchEnd.y);
-    
-    // Swipe left (positive deltaX) with minimal vertical movement
-    if (deltaX > 50 && deltaY < 80) {
-      openFoodPanel();
-    }
+    const dx = touchStart.x - e.changedTouches[0].clientX;
+    const dy = Math.abs(touchStart.y - e.changedTouches[0].clientY);
     touchStart = null;
+
+    if (dy > 60 || Math.abs(dx) < 40) return;
+
+    if (dx < 0) {
+      // Swipe right — only open nutrition if already at the leftmost card
+      const atStart = scroll.scrollLeft <= 20;
+      if (atStart) openFoodPanel();
+    }
   }, { passive: true });
-  
+
   scroll._swipeListenerAttached = true;
 }
+
+// Swipe-left on the food panel to close it back to days
+(function _attachFoodPanelSwipeClose() {
+  const panel = document.getElementById('food-panel');
+  if (!panel) return;
+  let tx = null;
+  panel.addEventListener('touchstart', (e) => {
+    tx = e.touches[0].clientX;
+  }, { passive: true });
+  panel.addEventListener('touchend', (e) => {
+    if (tx === null) return;
+    const dx = tx - e.changedTouches[0].clientX;
+    tx = null;
+    if (dx > 60) closeFoodPanel(); // swipe left = positive dx
+  }, { passive: true });
+})();
 
 // ── Settings modal ────────────────────────────────────────────────────────────
 function openSettings() {
