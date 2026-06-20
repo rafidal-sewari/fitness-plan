@@ -603,6 +603,15 @@
     -webkit-tap-highlight-color: transparent;
   }
   .set-row-del:active { color: var(--red); opacity: 0.7; }
+  .set-row-dupe {
+    width: 30px; height: 30px; flex-shrink: 0; margin-left: 0;
+    border: none; border-radius: 50%; background: none;
+    color: var(--text3); font-size: 13px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s, opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .set-row-dupe:active { color: var(--blue); opacity: 0.7; }
 
   .add-set-btn {
     border-radius: var(--radius-btn);
@@ -2033,7 +2042,7 @@ function selectDay(day) {
   currentDay = day;
   const routine = ROUTINES[day];
   renderExerciseCards(day);
-  renderExTabs(routine.exercises);
+  _morphInnerToContent(() => renderExTabs(routine.exercises));
   animateHeader(routine.label, true);
   transitionViews(
     document.getElementById('view-days'),
@@ -2044,7 +2053,7 @@ function selectDay(day) {
 
 function backToDays() {
   currentDay = null;
-  renderDayTabs();
+  _morphInnerToContent(renderDayTabs);
   animateHeader('My Fitness Plan', false);
   transitionViews(
     document.getElementById('view-exercises'),
@@ -2127,7 +2136,7 @@ function renderExerciseCards(day) {
       </div>
     `;
     container.appendChild(card);
-    for (let i = 0; i < 3; i++) addSetToCard(cardId);
+    for (let i = 0; i < 1; i++) addSetToCard(cardId);
   });
 
   const addCard = document.createElement('div');
@@ -2165,6 +2174,9 @@ function _stepperRow(cardId, n) {
         </div>
       </div>
     </div>
+    <button class="set-row-dupe" type="button" title="Duplicate set">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </button>
     <button class="set-row-del" type="button" title="Remove set">×</button>
   `;
 
@@ -2194,6 +2206,21 @@ function _stepperRow(cardId, n) {
     });
     el.addEventListener('blur', () => setVal(el, getVal(el), step));
     el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+  });
+
+  // Duplicate row — insert a copy with same values right after this row
+  row.querySelector('.set-row-dupe').addEventListener('click', () => {
+    const card = document.getElementById(cardId);
+    const rows = card.querySelector('.set-table-rows');
+    const reps = getVal(repsEl);
+    const weight = getVal(weightEl);
+    const n = rows.querySelectorAll('.set-row').length + 1;
+    const newRow = _stepperRow(cardId, n);
+    newRow.querySelector('.set-reps').textContent = reps;
+    newRow.querySelector('.set-weight').textContent = weight;
+    row.after(newRow);
+    // Renumber all rows
+    rows.querySelectorAll('.set-row .set-row-num').forEach((el, i) => el.textContent = i + 1);
   });
 
   // Delete row — renumber remaining rows
